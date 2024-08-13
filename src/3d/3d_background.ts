@@ -13,6 +13,7 @@ varying vec2 vUv;
 uniform vec3 iResolution;
 uniform float iTime;
 
+float horizon = -1.0;
 
 float sun(vec2 uv, float battery)
 {
@@ -95,11 +96,11 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     //if (abs(uv.x) < (9.0 / 16.0))
     {
         // Grid
-        float fog = smoothstep(0.1, -0.02, abs(uv.y + 0.2));
-        vec3 col = vec3(0.0, 0.1, 0.2);
-        if (uv.y < -0.2)
+        float fog = smoothstep(0.1, -0.02, abs(uv.y + horizon));
+        vec3 col = vec3(0.0, 0.1, horizon);
+        if (uv.y < -horizon)
         {
-            uv.y = 3.0 / (abs(uv.y + 0.2) + 0.05);
+            uv.y = 3.0 / (abs(uv.y + horizon) + 0.05);
             uv.x *= uv.y * 1.0;
             float gridVal = grid(uv, battery);
             col = mix(col, vec3(1.0, 0.5, 1.0), gridVal);
@@ -113,7 +114,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             vec2 fujiUV = uv;
             
             // Sun
-            sunUV += vec2(0.75, 0.2);
+            sunUV += vec2(0.95, 0.1);
             //uv.y -= 1.1 - 0.51;
             col = vec3(1.0, 0.2, 1.0);
             float sunVal = sun(sunUV, battery);
@@ -122,16 +123,16 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             col = mix(vec3(0.0, 0.0, 0.0), col, sunVal);
             
             // fuji
-            float fujiVal = sdTrapezoid( uv  + vec2(-0.75+sunUV.y * 0.0, 0.5), 1.75 + pow(uv.y * uv.y, 2.1), 0.2, 0.5);
+            float fujiVal = sdTrapezoid( uv  + vec2(-0.75+sunUV.y * 0.0, 0.5), 1.75 + pow(uv.y * uv.y, 2.1), horizon, 0.5);
             float waveVal = uv.y + sin(uv.x * 20.0 + iTime * 2.0) * 0.05 + 0.2;
-            float wave_width = smoothstep(0.0,0.01,(waveVal));
+            float wave_width = smoothstep(0.0,0.005,(waveVal));
             
             // fuji color
             col = mix( col, mix(vec3(0.0, 0.0, 0.25), vec3(1.0, 0.0, 0.5), fujiD), step(fujiVal, 0.0));
             // fuji top snow
             col = mix( col, vec3(1.0, 0.5, 1.0), wave_width * step(fujiVal, 0.0));
             // fuji outline
-            col = mix( col, vec3(1.0, 0.5, 1.0), 1.0-smoothstep(0.0,0.01,abs(fujiVal)) );
+            col = mix( col, vec3(1.0, 0.5, 1.0), 1.0-smoothstep(0.0,0.005,abs(fujiVal)) );
             //col = mix( col, vec3(1.0, 1.0, 1.0), 1.0-smoothstep(0.03,0.04,abs(fujiVal)) );
             //col = vec3(1.0, 1.0, 1.0) *(1.0-smoothstep(0.03,0.04,abs(fujiVal)));
             
@@ -142,13 +143,13 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             vec2 cloudUV = uv;
             cloudUV.x = mod(cloudUV.x + iTime * 0.1, 4.0) - 2.0;
             float cloudTime = iTime * 0.5;
-            float cloudY = -0.5;
+            float cloudY = -0.1;
             float cloudVal1 = sdCloud(cloudUV, 
                                      vec2(0.1 + sin(cloudTime + 140.5)*0.1,cloudY), 
                                      vec2(1.05 + cos(cloudTime * 0.9 - 36.56) * 0.1, cloudY), 
                                      vec2(0.2 + cos(cloudTime * 0.867 + 387.165) * 0.1,0.25+cloudY), 
                                      vec2(0.5 + cos(cloudTime * 0.9675 - 15.162) * 0.09, 0.25+cloudY), 0.075);
-            cloudY = -0.6;
+            cloudY = -0.3;
             float cloudVal2 = sdCloud(cloudUV, 
                                      vec2(-0.9 + cos(cloudTime * 1.02 + 541.75) * 0.1,cloudY), 
                                      vec2(-0.5 + sin(cloudTime * 0.9 - 316.56) * 0.1, cloudY), 
@@ -159,7 +160,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             
             //col = mix(col, vec3(1.0,1.0,0.0), smoothstep(0.0751, 0.075, cloudVal));
             col = mix(col, vec3(0.0, 0.0, 0.2), 1.0 - smoothstep(0.075 - 0.0001, 0.075, cloudVal));
-            col += vec3(1.0, 1.0, 1.0)*(1.0 - smoothstep(0.0,0.01,abs(cloudVal - 0.075)));
+            col += vec3(1.0, 1.0, 1.0)*(1.0 - smoothstep(0.0,0.005,abs(cloudVal - 0.075)));
         }
 
         col += fog * fog * fog;

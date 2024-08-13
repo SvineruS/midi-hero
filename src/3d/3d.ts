@@ -11,19 +11,19 @@ export const LINE_POS = [    -1.8,    -0.6,    0.6,    1.8,]
 
 
 export const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0xcccccc, 0.001);
+scene.fog = new THREE.FogExp2(0x0580ae, 0.003);
 // scene.background = new THREE.Color(0x1111121);
 
-export const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 12  ;
-camera.position.y = 5;
-camera.rotation.x = Math.PI * -0.1
 
 export const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 
+export const camera = new THREE.PerspectiveCamera(15, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.z = 30  ;
+camera.position.y = 3;
+camera.rotation.x = Math.PI * -0.002
 
 
 
@@ -48,11 +48,17 @@ addLight(0x00ee00, 5)
 addLight(0x0000ee, 7)
 addLight(0xee0000, 9)
 
+const farLight = new THREE.PointLight(0xeeeeee, 100000000, 700);
+farLight.position.z = -900;
+farLight.position.y = 10;
+scene.add(farLight)
 
 
 
 
-const floorGeometry = new THREE.PlaneGeometry(5, 500);
+
+
+const floorGeometry = new THREE.PlaneGeometry(5, 1000);
 const floorMaterial = new THREE.MeshStandardMaterial({color: 0xffffff});
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
@@ -67,7 +73,7 @@ finish.position.y = -0.4;
 scene.add(finish);
 
 
-const trackGeometry = new THREE.BoxGeometry(1, 0.1, 5000);
+const trackGeometry = new THREE.BoxGeometry(1, 0.1, 1000);
 const trackMaterial = new THREE.MeshStandardMaterial({color: 0x111111});
 const addTrack = (x: number) => {
     const track1 = new THREE.Mesh(trackGeometry, trackMaterial);
@@ -126,8 +132,8 @@ export const createText = (message: string) => {
 
 export const text1 = new THREE.Mesh(createText('   Score: 0\n   Combo: 0\n   Hits: 0\n   Fails: 0'), matLite);
 text1.position.z = -40;
-text1.position.y = 1;
-text1.position.x = -10;
+text1.position.y = 10;
+text1.position.x = -12;
 scene.add(text1);
 
 
