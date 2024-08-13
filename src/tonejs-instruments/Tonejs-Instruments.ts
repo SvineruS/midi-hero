@@ -19,6 +19,7 @@ export async function loadInstrument(instrument: Instrument): Promise<Sampler | 
         if (instrument.name == "acoustic guitar (nylon)") return load("guitar-nylon")
         if (["electric guitar (jazz)", "electric guitar (clean)", "electric guitar (muted)",
             "overdriven guitar", "distortion guitar"].includes(instrument.name)) return load("guitar-electric")
+        if (instrument.name == "guitar harmonics") return load("harmonium")
         return load("guitar-acoustic")
     }
     if (fam == "bass") return load("bass-electric")
@@ -30,8 +31,10 @@ export async function loadInstrument(instrument: Instrument): Promise<Sampler | 
     if (fam == "ensemble") return load("harp")
     if (fam == "brass") {
         if (instrument.name == "trombone") return load("trombone")
+        if (instrument.name == "synthbrass 1") return load("trombone")
         if (instrument.name == "french-horn") return load("french-horn")
         if (instrument.name == "tuba") return load("tuba")
+        if (instrument.name == "trumpet") return load("trumpet")
         return load("trumpet")
 
     }

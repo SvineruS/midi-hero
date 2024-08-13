@@ -11,7 +11,7 @@ export const LINE_POS = [    -1.8,    -0.6,    0.6,    1.8,]
 
 
 export const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x0580ae, 0.003);
+scene.fog = new THREE.FogExp2(0xeeeeee, 0.003);
 // scene.background = new THREE.Color(0x1111121);
 
 
@@ -20,10 +20,10 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 
-export const camera = new THREE.PerspectiveCamera(15, window.innerWidth / window.innerHeight, 0.1, 500);
-camera.position.z = 30  ;
-camera.position.y = 3;
-camera.rotation.x = Math.PI * -0.002
+export const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 600);
+camera.position.z = 12  ;
+camera.position.y = 5;
+camera.rotation.x = Math.PI * -0.1;
 
 
 
@@ -34,24 +34,46 @@ const directionalLight = new THREE.DirectionalLight(0xefeeee, 1.1);
 scene.add(directionalLight);
 
 
-export const lights: THREE.PointLight[] = [];
-const addLight = (color, z) => {
-    const light = new THREE.PointLight(color, 500, 100);
+const farLight = new THREE.PointLight(0xeeeeee, 1000000, 200);
+farLight.position.z = -700;
+farLight.position.y = 10;
+scene.add(farLight)
+
+
+
+
+export const funLights: THREE.PointLight[] = [];
+const addFunLight = (color, z) => {
+    const light = new THREE.PointLight(color, 1000, 500);
     light.position.y = 10;
     light.position.z = -10 * z;
 
     scene.add(light);
-    lights.push(light);
+    funLights.push(light);
 }
-addLight(0xeeeeee, 2)
-addLight(0x00ee00, 5)
-addLight(0x0000ee, 7)
-addLight(0xee0000, 9)
+addFunLight(0xeeeeee, 2)
+addFunLight(0x00ee00, 5)
+addFunLight(0x0000ee, 7)
+addFunLight(0xee0000, 9)
 
-const farLight = new THREE.PointLight(0xeeeeee, 100000000, 700);
-farLight.position.z = -900;
-farLight.position.y = 10;
-scene.add(farLight)
+
+
+
+export const finishLights: THREE.PointLight[] = [];
+const addFinishLight = (x) => {
+    const light = new THREE.PointLight(0x0000000, 0, 100);
+    light.position.x = x;
+    light.position.y = 1;
+    light.position.z = -DISTANCE_FINISH;
+
+    scene.add(light);
+    finishLights.push(light);
+}
+
+addFinishLight(LINE_POS[0])
+addFinishLight(LINE_POS[1])
+addFinishLight(LINE_POS[2])
+addFinishLight(LINE_POS[3])
 
 
 
@@ -114,7 +136,7 @@ const font: Font = await new Promise((resolve, reject) => {
 
 
 const matLite = new THREE.MeshBasicMaterial({
-    color: 0xeeeeee,
+    color: 0x111111,
     transparent: true,
     opacity: 0.8,
     side: THREE.DoubleSide
@@ -131,9 +153,9 @@ export const createText = (message: string) => {
 }
 
 export const text1 = new THREE.Mesh(createText('   Score: 0\n   Combo: 0\n   Hits: 0\n   Fails: 0'), matLite);
-text1.position.z = -40;
-text1.position.y = 10;
-text1.position.x = -12;
+text1.position.z = -15;
+text1.position.y = 2;
+text1.position.x = -5;
 scene.add(text1);
 
 

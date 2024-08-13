@@ -8,8 +8,10 @@ export interface Note {
     name: string;
     startTime: number;
     duration: number;
-    status?: boolean;
     velocity: number;
+
+    flashed?: boolean;
+    status?: boolean;
 }
 
 export interface Instrument {
@@ -66,11 +68,10 @@ export class Game {
         });
 
 
-        this.synths = await Promise.all(
-            midi.tracks.map(track => loadInstrument(track.instrument))
-        )
-        console.log(this.instruments)
-
+        this.synths = [];
+        for (const track of midi.tracks) {
+            this.synths.push(await loadInstrument(track.instrument))
+        }
     }
 
 
@@ -118,10 +119,12 @@ export class Game {
 
         let l = 0;
         let r = notes.length - 1;
-        for (let i = 0; i < 15; i++) {
-            const mid = Math.floor((r + l) / 2);
-            if (notes[mid].startTime < start) l = mid;
-            else r = mid;
+        if (r > 0) {
+            for (let i = 0; i < 15; i++) {
+                const mid = Math.floor((r + l) / 2);
+                if (notes[mid].startTime < start) l = mid;
+                else r = mid;
+            }
         }
 
 
