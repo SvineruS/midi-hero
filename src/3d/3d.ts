@@ -4,14 +4,14 @@ import { Font } from "three/examples/jsm/loaders/FontLoader";
 import { background} from "./3d_background.ts";
 
 
-export const DISTANCE_FAR = 200;
+export const DISTANCE_FAR = 100;
 export const DISTANCE_FINISH = 0;
 
 export const LINE_POS = [    -1.8,    -0.6,    0.6,    1.8,]
 
 
 export const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0xeeeeee, 0.003);
+scene.fog = new THREE.FogExp2(0xfeaafe, 0.003);
 // scene.background = new THREE.Color(0x1111121);
 
 
@@ -51,10 +51,10 @@ const addFunLight = (color, z) => {
     scene.add(light);
     funLights.push(light);
 }
-addFunLight(0xeeeeee, 2)
-addFunLight(0x00ee00, 5)
-addFunLight(0x0000ee, 7)
-addFunLight(0xee0000, 9)
+addFunLight(0xee22ee, 2)
+addFunLight(0xee44ee, 5)
+addFunLight(0xee66ee, 7)
+addFunLight(0xee88ee, 9)
 
 
 

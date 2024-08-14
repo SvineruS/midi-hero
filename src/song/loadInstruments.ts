@@ -3,7 +3,7 @@ import {PolySynth, Sampler} from "tone";
 import * as Tone from "tone";
 
 
-const BASE_URL = '/src/tonejs-instruments/samples/'
+const BASE_URL = '/src/song/samples/'
 
 
 const defaultSynthOptions = {
@@ -46,7 +46,10 @@ export async function loadInstrument(instrument: Instrument): Promise<Sampler | 
         if (instrument.name == "flute") return load("flute")
         return load("harmonium")
     }
-    if (fam == "synth lead") return load("synth")
+    if (fam == "synth lead") {
+        if (instrument.name == "lead 1 (square)") return load("synth_lead_square")
+        return load("synth")
+    }
     if (fam == "drums") return load("drums")
     if (fam == "percussive") {
         if (instrument.name == "reverse cymbal") return loadOne("G#6", BASE_URL+"drums/reverseCymbal.ogg")
@@ -96,6 +99,47 @@ const instrumentsObj = {
         'C3': 'C3.ogg',
         'C4': 'C4.ogg',
         'F#4': 'Fs4.ogg',
+    },
+
+    'synth_bass_lead': {
+        'G#7': 'Gs7.ogg',
+        'G#6': 'Gs6.ogg',
+        'G#5': 'Gs5.ogg',
+        'G#4': 'Gs4.ogg',
+        'E6': 'E6.ogg',
+        'E5': 'E5.ogg',
+        'E3': 'E3.ogg',
+        'C7': 'C7.ogg',
+        'C4': 'C4.ogg',
+        'C3': 'C3.ogg',
+        'G#2': 'Gs2.ogg',
+        'F1': 'F1.ogg',
+        'E4': 'E4.ogg',
+        'E2': 'E2.ogg',
+        'C6': 'C6.ogg',
+        'C5': 'C5.ogg',
+        'C2': 'C2.ogg',
+    },
+    "synth_lead_square": {
+        "C2": "C2.ogg",
+        "C6": "C6.ogg",
+        "G#2": "Gs2.ogg",
+        "E1": "E1.ogg",
+        "E2": "E2.ogg",
+        "C5": "C5.ogg",
+        "E7": "E7.ogg",
+        "E4": "E4.ogg",
+        "G#1": "Gs1.ogg",
+        "E6": "E6.ogg",
+        "G#6": "Gs6.ogg",
+        "C7": "C7.ogg",
+        "E3": "E3.ogg",
+        "C4": "C4.ogg",
+        "E5": "E5.ogg",
+        "C3": "C3.ogg",
+        "G#3": "Gs3.ogg",
+        "G#4": "Gs4.ogg",
+        "G#5": "Gs5.ogg"
     },
 
     'bass-electric': {
