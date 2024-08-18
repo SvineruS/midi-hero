@@ -9,7 +9,7 @@ const CHUNK_SIZE_SEC = 2;
 export class SongPlayer {
 
     synths: (Sampler | PolySynth)[] = [];
-    startTime = 0;
+    private startTime = 0;
     lastLoadedChunk = -1;
     lastLoadedNote = [];
 
@@ -36,6 +36,10 @@ export class SongPlayer {
     stop() {
         this.synths.forEach(s => s.disconnect())
         this.startTime = 0;
+    }
+
+    isPlaying() {
+        return this.startTime > 0;
     }
 
     audioTime() {

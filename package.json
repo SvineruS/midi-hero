@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "samples": "npx tsx src/scripts/samples.ts"
@@ -13,11 +13,13 @@
     "@types/three": "^0.167.1",
     "@types/wav-encoder": "^1.3.3",
     "typescript": "^5.5.3",
-    "vite": "^5.4.0"
+    "vite": "^5.4.0",
+    "vite-plugin-node-polyfills": "^0.22.0"
   },
   "dependencies": {
     "@tonejs/midi": "^2.0.28",
     "three": "^0.167.1",
+    "timidity": "^1.3.0",
     "tone": "^15.0.4",
     "wav-encoder": "^1.3.0"
   }

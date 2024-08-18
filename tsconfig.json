@@ -19,7 +19,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    "esModuleInterop": true
+    "esModuleInterop": true,
+
+    "allowJs": true,
   },
   "include": ["src"]
 }

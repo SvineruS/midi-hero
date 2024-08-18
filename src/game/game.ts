@@ -8,7 +8,7 @@ import { GameVisual } from "./gameVisual.ts";
 Tone.setContext(new Tone.Context({ latencyHint: "playback" }))
 
 
-const HIT_TIME_UP = 0.09;
+const HIT_TIME_UP = 0.05;
 const HIT_TIME_DOWN = 0.05;
 
 
@@ -81,7 +81,6 @@ export class Game {
     }
 
     getDisplayNotes() {
-        console.log(this._bottomNoteIndex, this._topNoteIndex, this.instruments[this.selectedInstrument].notes.length)
         return this.instruments[this.selectedInstrument].notes.slice(this._bottomNoteIndex, this._topNoteIndex+1);
     }
 
@@ -99,6 +98,7 @@ export class Game {
         }
 
         const note = findMininimum(candidates, (note) => Math.abs(note.startTime - this._graphicTime));
+        console.log(note.startTime - this._graphicTime, note.startTime - this._graphicTime > 0 ? "late" : "early")
         if (note.status !== undefined) {
             console.warn("Already hit or miss", note.status)
             this.onFail(line);

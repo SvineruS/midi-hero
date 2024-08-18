@@ -1,3 +1,6 @@
+
+export const __dirname = new URL('.', import.meta.url).pathname;
+
 import "./style.css";
 import { Game } from "./game/game.ts";
 import { interpolate, populateSelect } from "./utils.ts";
@@ -7,19 +10,22 @@ import { Midi } from "@tonejs/midi";
 import { parseMidiForGame } from "./song/songParser.ts";
 import { SongPlayer } from "./song/songPlayer.ts";
 
+
+import { SongPlayer2 } from "./song/songPlayer2.ts";
+
 const changeInstElem: any = document.getElementById("changeInst")!;
 
 
 let timeOffset = -0.1;
 
 let game: Game;
-let songPlayer: SongPlayer;
+let songPlayer: SongPlayer2;
 
 async function load() {
 
     const midi = await Midi.fromUrl("/src/song.mid")
     const instruments = parseMidiForGame(midi);
-    songPlayer = new SongPlayer(midi);
+    songPlayer = new SongPlayer2("/src/song.mid");
     game = new Game(instruments);
 
     await songPlayer.load();
@@ -30,7 +36,7 @@ load();
 
 async function playPause() {
     if (game == undefined) await load();
-    if (songPlayer.startTime === 0) songPlayer.play();
+    if (!songPlayer.isPlaying()) songPlayer.play();
     else songPlayer.stop();
 }
 
@@ -41,8 +47,10 @@ function update(timeNow: number, delta: number) {
 
 
     game.update(timeNow);
-    songPlayer.loadNextChunk(timeNow);
+    // songPlayer.loadNextChunk(timeNow);
     game.visuals.update(delta)
+    // console.log("audio time", songPlayer.audioTime())
+    // console.log("fixed time", timeNow)
 
 
 }
@@ -57,7 +65,7 @@ function animate() {
     requestAnimationFrame(animate);
     const now = performance.now() / 1000;
 
-    if (songPlayer?.startTime > 0) {
+    if (songPlayer?.isPlaying()) {
 
         const delta = now - prevFrameTime;
         prevFrameTime = now;
