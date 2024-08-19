@@ -71,7 +71,8 @@ function animate() {
         const audioTimeNow = songPlayer.audioTime();
         console.log(audioTimeNow)
 
-        if (audioTimeNow != lastAudioTime) {
+        console.log(audioTimeNow, songPlayer.rawAudioTime())
+        if (audioTimeNow != lastAudioTime && songPlayer.rawAudioTime() != 0) {  // rawAudioTime() == 0 is case when song is end, but we don't want to reset time
             lastAudioTime = audioTimeNow;
             timeAfterLastAudioTime = 0;
         }

@@ -36,7 +36,7 @@ scene.add(directionalLight);
 
 
 const farLight = new THREE.PointLight(0xeeeeee, 1000000, 200);
-farLight.position.z = -700;
+farLight.position.z = -600;
 farLight.position.y = 10;
 scene.add(farLight)
 
@@ -90,7 +90,7 @@ scene.add(floor);
 
 const finishGeometry = new THREE.BoxGeometry(5, 1, 0.1);
 const finishMaterial = new THREE.MeshStandardMaterial({color: 0xee11111});
-export const finish = new THREE.Mesh(finishGeometry, finishMaterial);
+    export const finish = new THREE.Mesh(finishGeometry, finishMaterial);
 finish.position.z = -DISTANCE_FINISH;
 finish.position.y = -0.4;
 scene.add(finish);
@@ -117,7 +117,7 @@ export const cubeMaterialSuccess = new THREE.MeshStandardMaterial({color: 0x22ee
 export const cubeMaterialNeutral = new THREE.MeshStandardMaterial({color: 0xeeeeee});
 export const cubeMaterialFailed = new THREE.MeshStandardMaterial({color: 0xee2222});
 
-const cubeGeometry = new THREE.BoxGeometry(1, 0.7, 1);
+const cubeGeometry = new THREE.BoxGeometry(1, 0.6, 1);
 const addCube = () => {
     const cube = new THREE.Mesh(cubeGeometry, cubeMaterialNeutral);
     cube.position.z = DISTANCE_FAR;

@@ -17,7 +17,7 @@ export function parseMidiForGame(midi: Midi) {
 
         track.notes.forEach(note => {
             const line = note.midi % 4;
-            const viewKey = `${line}-${Math.floor(note.time/0.010)}`;
+            const viewKey = `${line}-${Math.floor(note.time/0.100)}`;
             if (viewed.has(viewKey)) return;
             viewed.add(viewKey);
 

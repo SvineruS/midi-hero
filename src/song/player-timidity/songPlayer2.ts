@@ -31,4 +31,7 @@ export class SongPlayer2 {
     audioTime(): number {
         return this.player.currentTime + this.startTime;
     }
+    rawAudioTime(): number {
+        return this.player.currentTime
+    }
 }

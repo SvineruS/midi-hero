@@ -5,7 +5,7 @@ import { GameVisual } from "./gameVisual.ts";
 
 
 
-const DISPLAY_TIME_TOP = 1.75;
+const DISPLAY_TIME_TOP = 2;
 const DISPLAY_TIME_BOTTOM = 0.1;
 
 
