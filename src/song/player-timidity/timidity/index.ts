@@ -149,8 +149,8 @@ const NUM_CHANNELS = 2; // stereo (2 channels)
 const BYTES_PER_SAMPLE = 2 * NUM_CHANNELS;
 const BUFFER_SIZE = 16384; // buffer size for each render() call
 
-const AudioContext = typeof window !== 'undefined' &&
-  (window.AudioContext || window.webkitAudioContext);
+// @ts-ignore
+const AudioContext = typeof window !== 'undefined' &&  (window.AudioContext || window.webkitAudioContext);
 
 type LibTimidityType = {
   FS: any; // Replace with actual type if known
@@ -164,6 +164,9 @@ type LibTimidityType = {
   _mid_song_seek: (songPtr: number, timeMs: number) => void;
   _mid_song_get_time: (songPtr: number) => number;
   _mid_song_get_total_time: (songPtr: number) => number;
+  _mid_get_load_request_count: (songPtr: number) => number;
+  _mid_song_read_wave: (_songPtr: number, _bufferPtr: number, number: number) => number;
+  _mid_get_load_request: (songPtr: number, i: number) => number;
   _malloc: (size: number) => number;
   _free: (ptr: number) => void;
   HEAPU8: Uint8Array;
@@ -181,7 +184,7 @@ export class Timidity extends EventEmitter {
   private _bufferPtr: number;
   private _array: Int16Array;
   private _currentUrlOrBuf: string | Uint8Array | null;
-  private _interval: NodeJS.Timer | null;
+  private _interval: NodeJS.Timeout;
   private _audioContext: AudioContext;
   private _node: ScriptProcessorNode | null;
   private _lib: LibTimidityType | null;
@@ -351,7 +354,7 @@ export class Timidity extends EventEmitter {
     this._lib._free(midiBufPtr);
 
       if (songPtr === 0) {
-          return this._destroy(new Error('Failed to load MIDI file'));
+          this._destroy(new Error('Failed to load MIDI file'));
       }
 
       return songPtr;
@@ -467,8 +470,7 @@ export class Timidity extends EventEmitter {
         const sampleCount = byteCount / BYTES_PER_SAMPLE;
 
         // Was anything output? If not, don't bother copying anything
-        if (sampleCount === 0) {Tone.setContext(new Tone.Context({ latencyHint: "playback" }))
-
+        if (sampleCount === 0) {
             return 0;
         }
 

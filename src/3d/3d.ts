@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+// @ts-ignore
 import { Font } from "three/examples/jsm/loaders/FontLoader";
 import { background} from "./3d_background.ts";
 
