@@ -1,11 +1,9 @@
-import * as Tone from "tone";
 import { Instrument } from "../song/types.ts";
 import { Combo } from "./combo.ts";
 import { findMininimum } from "../utils.ts";
 import { GameVisual } from "./gameVisual.ts";
 
 
-Tone.setContext(new Tone.Context({ latencyHint: "playback" }))
 
 const DISPLAY_TIME_TOP = 2;
 const DISPLAY_TIME_BOTTOM = 0.1;

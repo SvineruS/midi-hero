@@ -20,11 +20,12 @@ let songPlayer: SongPlayer2;
 
 async function load() {
 
-    const path = "/src/songs/song.mid";
+    const songPath = "/midi-hero/src/songs/song.mid";
+    const timidityPath = "/midi-hero/src/song/player-timidity/timidity/files";
 
-    const midi = await Midi.fromUrl(path)
+    const midi = await Midi.fromUrl(songPath)
     const { instruments, startTime } = parseMidiForGame(midi);
-    songPlayer = new SongPlayer2(path, startTime);
+    songPlayer = new SongPlayer2(songPath, startTime, timidityPath);
     game = new Game(instruments);
 
     await songPlayer.load();

@@ -1,10 +1,9 @@
 /*! timidity. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
-import Debug from 'debug';
 import { EventEmitter } from 'events';
 import LibTimidity from './libtimidity.js';
 
-const debug = Debug('timidity');
-const debugVerbose = Debug('timidity:verbose');
+const debug = console.debug
+const debugVerbose = console.debug
 
 // Inlined at build time by 'brfs' browserify transform
 const TIMIDITY_CFG = `
@@ -468,7 +467,8 @@ export class Timidity extends EventEmitter {
         const sampleCount = byteCount / BYTES_PER_SAMPLE;
 
         // Was anything output? If not, don't bother copying anything
-        if (sampleCount === 0) {
+        if (sampleCount === 0) {Tone.setContext(new Tone.Context({ latencyHint: "playback" }))
+
             return 0;
         }
 

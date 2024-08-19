@@ -7,8 +7,9 @@ export class SongPlayer2 {
     constructor(
         public midi: string,
         public startTime: number,
+        timidityPath: string
     ) {
-        this.player = new Timidity("/src/song/player-timidity/timidity/files");
+        this.player = new Timidity(timidityPath);
     };
 
     async load() {
