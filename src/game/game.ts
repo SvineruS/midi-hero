@@ -5,14 +5,12 @@ import { GameVisual } from "./gameVisual.ts";
 
 
 
-const DISPLAY_TIME_TOP = 2;
+const DISPLAY_TIME_TOP = 1.75;
 const DISPLAY_TIME_BOTTOM = 0.1;
-const HIT_TIME_UP = 0.05;
-const HIT_TIME_DOWN = 0.05;
 
 
 export class Game {
-    _graphicTime = 0;
+    _gameTime = 0;
 
     timeTop = 0;
     timeBot = 0;
@@ -24,6 +22,8 @@ export class Game {
 
 
     selectedInstrument = 0;
+    hitTime = 0.05;
+
 
     combo = new Combo();
     visuals = new GameVisual(this);
@@ -31,7 +31,7 @@ export class Game {
     constructor(
         public instruments: Instrument[],
     ) {
-
+        this.setHitTime(0.05);   // 50ms before and after finish
     }
 
 
@@ -50,13 +50,13 @@ export class Game {
 
 
     update(timeNow: number) {
-        this._graphicTime = timeNow;
+        this._gameTime = timeNow;
 
         this.timeTop = timeNow + DISPLAY_TIME_TOP;
         this.timeBot = timeNow - DISPLAY_TIME_BOTTOM;
 
-        const timeClickTop = timeNow + HIT_TIME_UP;
-        const timeClickBottom = timeNow - HIT_TIME_DOWN;
+        const timeClickTop = timeNow + this.hitTime;
+        const timeClickBottom = timeNow - this.hitTime;
 
         const notes = this.instruments[this.selectedInstrument].notes;
 
@@ -97,8 +97,8 @@ export class Game {
             return false;
         }
 
-        const note = findMininimum(candidates, (note) => Math.abs(note.startTime - this._graphicTime));
-        console.log(note.startTime - this._graphicTime, note.startTime - this._graphicTime > 0 ? "late" : "early")
+        const note = findMininimum(candidates, (note) => Math.abs(note.startTime - this._gameTime));
+        console.log(note.startTime - this._gameTime, note.startTime - this._gameTime > 0 ? "late" : "early")
         if (note.status !== undefined) {
             console.warn(note.status ? "Already hit" : "Already miss")
             this.onFail(line, true);
@@ -123,9 +123,10 @@ export class Game {
     }
 
 
-
-
-
+    setHitTime(hitTime: number) {
+        this.hitTime = hitTime;
+        this.visuals.setFinishSize(this.hitTime, DISPLAY_TIME_TOP)
+    }
 }
 
 

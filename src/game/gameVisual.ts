@@ -5,7 +5,7 @@ import {
     cubeMaterialSuccess,
     cubes,
     DISTANCE_FAR,
-    DISTANCE_FINISH, finishLights, funLights,
+    DISTANCE_FINISH, finish, finishLights, funLights,
     LINE_POS
 } from "../3d/3d.ts";
 import { interpolate, lerp } from "../utils.ts";
@@ -42,8 +42,8 @@ export class GameVisual {
             light.intensity = interpolate(light.intensity, 0, 0.1));
         funLights.forEach((light, i) => {
             light.intensity = this.lightsIntensity * 1000;
-            light.position.x = Math.sin(this.game._graphicTime + i * 10) * 10;
-            light.position.z = Math.cos(this.game._graphicTime + i * 10) * 10;
+            light.position.x = Math.sin(this.game._gameTime + i * 10) * 10;
+            light.position.z = Math.cos(this.game._gameTime + i * 10) * 10;
         });
 
 
@@ -61,7 +61,7 @@ export class GameVisual {
                 continue;
             }
 
-            const notePosZ = lerp(note.startTime, this.game._graphicTime, this.game.timeTop, DISTANCE_FINISH, DISTANCE_FAR);
+            const notePosZ = lerp(note.startTime, this.game._gameTime, this.game.timeTop, DISTANCE_FINISH, DISTANCE_FAR);
             const notePosX = LINE_POS[note.note];
 
             if (note.status == undefined) cube.material = cubeMaterialNeutral;
@@ -69,7 +69,7 @@ export class GameVisual {
             else if (!note.status) cube.material = cubeMaterialFailed;
             else console.warn(note.status)
 
-            if (!note.flashed && note.startTime < this.game._graphicTime) {
+            if (!note.flashed && note.startTime < this.game._gameTime) {
                 note.flashed = true;
                 this.onNotePlay()
                 console.log("Flashed")
@@ -93,6 +93,8 @@ export class GameVisual {
     }
 
 
-
-
+    setFinishSize(HIT_TIME: number, DISPLAY_TIME_TOP: number) {
+        const size = lerp(HIT_TIME, 0, DISPLAY_TIME_TOP, DISTANCE_FINISH, DISTANCE_FAR);
+        finish.scale.z = size;
+    }
 }

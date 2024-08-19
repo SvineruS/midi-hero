@@ -6,16 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta https-equiv="Content-Security-Policy" content="default-src *;" />
 
-    <title>Vite + TS</title>
+    <title>MIDI HERO</title>
     <script type="module" src="/src/main.ts"></script>
 
 </head>
 <body>
 <div id="app"></div>
 <button id="playPause">Play/Pause</button>
-<select id="changeInst"></select>
-<input type="range" min="-2.0" max="2" value="-1.04" step="0.001" id="timeOffset" style="width: 500px"/>
-<!--    <audio id="audioElem" controls="controls"></audio>-->
-<button id="test">Test</button>
+Select instrument: <select id="changeInst"></select>
+Audio delay: <input type="range" min="-2.0" max="1" value="-1.04" step="0.001" id="timeOffset" style="width: 500px"/>
+Easyculty: <input type="range" min="0.03" max="0.1" value="0.05" step="0.01" id="hitTime" style="width: 200px"/>
 </body>
 </html>

@@ -90,7 +90,7 @@ scene.add(floor);
 
 const finishGeometry = new THREE.BoxGeometry(5, 1, 0.1);
 const finishMaterial = new THREE.MeshStandardMaterial({color: 0xee11111});
-const finish = new THREE.Mesh(finishGeometry, finishMaterial);
+export const finish = new THREE.Mesh(finishGeometry, finishMaterial);
 finish.position.z = -DISTANCE_FINISH;
 finish.position.y = -0.4;
 scene.add(finish);

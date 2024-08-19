@@ -14,6 +14,9 @@ const changeInstElem: any = document.getElementById("changeInst")!;
 
 // @ts-ignore
 let timeOffset = +document.getElementById("timeOffset")!.value;
+// @ts-ignore
+let hitTime = +document.getElementById("hitTime")!.value;
+
 
 let game: Game;
 let songPlayer: SongPlayer2;
@@ -103,6 +106,11 @@ function changeTimeOffset(e: any) {
     console.log(timeOffset)
 }
 
+function changeHitTime(e: any) {
+    game.setHitTime(+e.target.value);
+    console.log(+e.target.value)
+}
+
 
 function resize() {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -115,4 +123,5 @@ window.addEventListener('resize', resize);
 document.body.addEventListener('keydown', keyPressed);
 document.getElementById('playPause')!.addEventListener('click', playPause);
 document.getElementById("timeOffset")!.addEventListener('input', changeTimeOffset);
+document.getElementById("hitTime")!.addEventListener('input', changeHitTime);
 changeInstElem.addEventListener('change', (e: any) => game.setInstrument(+e.target.value));
