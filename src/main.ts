@@ -20,8 +20,8 @@ let songPlayer: SongPlayer2;
 
 async function load() {
 
-    const songPath = "/midi-hero/src/songs/song.mid";
-    const timidityPath = "/midi-hero/src/song/player-timidity/timidity/files";
+    const songPath = "/midi-hero/songs/song.mid";
+    const timidityPath = "/midi-hero/timidity";
 
     const midi = await Midi.fromUrl(songPath)
     const { instruments, startTime } = parseMidiForGame(midi);
