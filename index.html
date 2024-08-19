@@ -4,18 +4,29 @@
     <meta charset="UTF-8"/>
     <link rel="icon" type="image/svg+xml" href="/midi-hero/vite.svg"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta https-equiv="Content-Security-Policy" content="default-src *;" />
+    <meta https-equiv="Content-Security-Policy" content="default-src *;"/>
 
     <title>MIDI HERO</title>
 
-  <script type="module" crossorigin src="/midi-hero/assets/index-BAmorclg.js"></script>
-  <link rel="stylesheet" crossorigin href="/midi-hero/assets/index-DLBO0v3x.css">
+  <script type="module" crossorigin src="/midi-hero/assets/index-CFxRXLkK.js"></script>
+  <link rel="stylesheet" crossorigin href="/midi-hero/assets/index-D65oXBob.css">
 </head>
 <body>
 <div id="app"></div>
-<button id="playPause">Play/Pause</button>
-Select instrument: <select id="changeInst"></select>
-Audio delay: <input type="range" min="-2.0" max="1" value="-1.04" step="0.001" id="timeOffset" style="width: 500px"/>
-Easyculty: <input type="range" min="0.03" max="0.1" value="0.05" step="0.01" id="hitTime" style="width: 200px"/>
+<div class="header">
+    <button id="playPause">Play/Pause</button>
+    <div>
+        Select instrument: <select id="changeInst"></select>
+    </div>
+    <div>
+        Audio delay:
+        <input type="range" min="-2.0" max="0.5" value="-0.8" step="0.001" id="timeOffset" style="width: 500px"/>
+    </div>
+    <div>
+        Easyculty:
+        <input type="range" min="0.03" max="0.1" value="0.05" step="0.01" id="hitTime"/>
+    </div>
+
+</div>
 </body>
 </html>
