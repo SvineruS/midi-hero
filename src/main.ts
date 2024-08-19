@@ -1,6 +1,3 @@
-
-export const __dirname = new URL('.', import.meta.url).pathname;
-
 import "./style.css";
 import { Game } from "./game/game.ts";
 import { interpolate, populateSelect } from "./utils.ts";
@@ -8,24 +5,26 @@ import { camera, renderer, scene } from "./3d/3d.ts";
 import "./song/songParser.ts";
 import { Midi } from "@tonejs/midi";
 import { parseMidiForGame } from "./song/songParser.ts";
-import { SongPlayer } from "./song/songPlayer.ts";
 
 
-import { SongPlayer2 } from "./song/songPlayer2.ts";
+import { SongPlayer2 } from "./song/player-timidity/songPlayer2.ts";
 
 const changeInstElem: any = document.getElementById("changeInst")!;
 
 
-let timeOffset = -0.1;
+// @ts-ignore
+let timeOffset = +document.getElementById("timeOffset")!.value;
 
 let game: Game;
 let songPlayer: SongPlayer2;
 
 async function load() {
 
-    const midi = await Midi.fromUrl("/src/song.mid")
-    const instruments = parseMidiForGame(midi);
-    songPlayer = new SongPlayer2("/src/song.mid");
+    const path = "/src/songs/song.mid";
+
+    const midi = await Midi.fromUrl(path)
+    const { instruments, startTime } = parseMidiForGame(midi);
+    songPlayer = new SongPlayer2(path, startTime);
     game = new Game(instruments);
 
     await songPlayer.load();
@@ -44,22 +43,15 @@ async function playPause() {
 
 
 function update(timeNow: number, delta: number) {
-
-
     game.update(timeNow);
-    // songPlayer.loadNextChunk(timeNow);
     game.visuals.update(delta)
-    // console.log("audio time", songPlayer.audioTime())
-    // console.log("fixed time", timeNow)
-
-
 }
 
 
 let lastAudioTime = 0;
 let timeAfterLastAudioTime = 0;
 let prevFrameTime = performance.now();
-let audioTimeFixed = 0;
+let audioTimeAdjusted = 0;
 
 function animate() {
     requestAnimationFrame(animate);
@@ -73,17 +65,18 @@ function animate() {
         timeAfterLastAudioTime += delta;
 
         const audioTimeNow = songPlayer.audioTime();
+        console.log(audioTimeNow)
 
         if (audioTimeNow != lastAudioTime) {
             lastAudioTime = audioTimeNow;
             timeAfterLastAudioTime = 0;
         }
 
-        const audioTimeFixedTarget = lastAudioTime + timeAfterLastAudioTime + +timeOffset;
+        const audioTimeFixedTarget = lastAudioTime + timeAfterLastAudioTime;
         // console.log(timeOffsetElem.value)
-        audioTimeFixed = interpolate(audioTimeFixed, audioTimeFixedTarget, 0.2);
+        audioTimeAdjusted = interpolate(audioTimeAdjusted, audioTimeFixedTarget, 0.5);
 
-        update(audioTimeFixed, delta);
+        update(audioTimeAdjusted + +timeOffset, delta);
 
     }
     renderer.render(scene, camera);

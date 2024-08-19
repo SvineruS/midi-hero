@@ -4,6 +4,7 @@ import { Instrument } from "./types.ts";
 
 export function parseMidiForGame(midi: Midi) {
 
+    console.log(midi)
 
     const instrArr: Instrument[] = midi.tracks.map((track) => {
         const viewed = new Set();
@@ -29,10 +30,17 @@ export function parseMidiForGame(midi: Midi) {
 
         return instrument;
     })
-        .filter(instr => instr.notes.length > 0);
+        .filter(instr => instr.notes.length > 0)
+        .sort((a, b) => a.notes[0].startTime - b.notes[0].startTime)  // earliest
+        // .sort((a, b) => b.notes.length - a.notes.length);  // most notes
 
+
+    const startTime = instrArr[0].notes[0].startTime;
+
+    console.log(instrArr);
+    console.log("startTime", startTime)
     // instrArr.forEach(instr => instr.notes.sort((a, b) => a.startTime - b.startTime));
 
 
-    return instrArr;
+    return {instruments: instrArr, startTime};
 }

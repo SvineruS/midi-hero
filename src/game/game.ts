@@ -7,7 +7,8 @@ import { GameVisual } from "./gameVisual.ts";
 
 Tone.setContext(new Tone.Context({ latencyHint: "playback" }))
 
-
+const DISPLAY_TIME_TOP = 2;
+const DISPLAY_TIME_BOTTOM = 0.1;
 const HIT_TIME_UP = 0.05;
 const HIT_TIME_DOWN = 0.05;
 
@@ -53,8 +54,8 @@ export class Game {
     update(timeNow: number) {
         this._graphicTime = timeNow;
 
-        this.timeTop = timeNow + 2
-        this.timeBot = timeNow - 0.1
+        this.timeTop = timeNow + DISPLAY_TIME_TOP;
+        this.timeBot = timeNow - DISPLAY_TIME_BOTTOM;
 
         const timeClickTop = timeNow + HIT_TIME_UP;
         const timeClickBottom = timeNow - HIT_TIME_DOWN;
@@ -71,7 +72,8 @@ export class Game {
                 this._bottomClickableNoteIndex = i;
                 if (note.status === undefined) {
                     notes[i].status = false;
-                    this.onFail(note.note);
+                    console.warn("Missed note")
+                    this.onFail(note.note, false);
                 }
             } else if (noteTime < timeClickTop) this._topClickableNoteIndex = i;
             else if (noteTime < this.timeTop) this._topNoteIndex = i;
@@ -92,7 +94,7 @@ export class Game {
         const notes = this.getClickableNotes();
         const candidates = notes.filter((note) => line == note.note);
         if (candidates.length == 0) {
-            this.onFail(line);
+            this.onFail(line, true);
             console.warn("No candidates")
             return false;
         }
@@ -100,8 +102,8 @@ export class Game {
         const note = findMininimum(candidates, (note) => Math.abs(note.startTime - this._graphicTime));
         console.log(note.startTime - this._graphicTime, note.startTime - this._graphicTime > 0 ? "late" : "early")
         if (note.status !== undefined) {
-            console.warn("Already hit or miss", note.status)
-            this.onFail(line);
+            console.warn(note.status ? "Already hit" : "Already miss")
+            this.onFail(line, true);
             return false;
         }
 
@@ -111,9 +113,10 @@ export class Game {
     }
 
 
-    onFail(line: number) {
+    onFail(line: number, isUserInput=false) {
         this.combo.onFail();
-        this.visuals.onHitOrMiss(false, line)
+        if (isUserInput)
+            this.visuals.onHitOrMiss(false, line)
     }
 
     onSuccess(line: number) {

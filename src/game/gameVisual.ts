@@ -1,7 +1,7 @@
 import { Color } from "three";
 import {
     cubeMaterialFailed,
-    cubeMaterialNeutral,
+    cubeMaterialNeutral, cubeMaterialNow,
     cubeMaterialSuccess,
     cubes,
     DISTANCE_FAR,
@@ -73,6 +73,7 @@ export class GameVisual {
                 note.flashed = true;
                 this.onNotePlay()
                 console.log("Flashed")
+                cube.material = cubeMaterialNow;
             }
 
             cube.position.x = notePosX;

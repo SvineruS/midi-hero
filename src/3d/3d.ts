@@ -111,6 +111,7 @@ addTrack(LINE_POS[3]);
 
 export const cubes: THREE.Mesh<any>[] = [];
 
+export const cubeMaterialNow = new THREE.MeshStandardMaterial({color: 0x22eeee, emissiveIntensity: 100});
 export const cubeMaterialSuccess = new THREE.MeshStandardMaterial({color: 0x22ee22});
 export const cubeMaterialNeutral = new THREE.MeshStandardMaterial({color: 0xeeeeee});
 export const cubeMaterialFailed = new THREE.MeshStandardMaterial({color: 0xee2222});

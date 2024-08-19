@@ -1,13 +1,15 @@
-import {Timidity} from "./timidity/index.ts";
+import {Timidity} from "./timidity";
 
 export class SongPlayer2 {
     private player: any;
     private playing: boolean = false;
 
-    constructor(public midi: string) {
-        this.player = new Timidity("/src/song/timidity/files");
+    constructor(
+        public midi: string,
+        public startTime: number,
+    ) {
+        this.player = new Timidity("/src/song/player-timidity/timidity/files");
     };
-
 
     async load() {
         this.player.load(this.midi);
@@ -18,14 +20,14 @@ export class SongPlayer2 {
         this.playing = true;
     };
     stop(): void {
-        this.player.stop();
+        // todo
+        this.player.pause();
         this.playing = false;
     }
     isPlaying(): boolean {
         return this.playing;
     }
     audioTime(): number {
-        // console.log("current time", this.player.currentTime)
-        return this.player.currentTime;
+        return this.player.currentTime + this.startTime;
     }
 }
