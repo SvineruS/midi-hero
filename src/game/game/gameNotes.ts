@@ -1,4 +1,4 @@
-import { NoteEvent } from "../song/types.ts";
+import { NoteEvent } from "../../songs/types.ts";
 import { findMininimum } from "../utils.ts";
 import { Game } from "./game.ts";
 

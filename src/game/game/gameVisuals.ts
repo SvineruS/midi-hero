@@ -16,7 +16,7 @@ import {
 import { interpolate, lerp } from "../utils.ts";
 import { backgroundUniforms } from "../3d/3d_background.ts";
 import { Game } from "./game.ts";
-import { LightEvent, NoteEvent } from "../song/types.ts";
+import { LightEvent, NoteEvent } from "../../songs/types.ts";
 import * as THREE from "three";
 
 

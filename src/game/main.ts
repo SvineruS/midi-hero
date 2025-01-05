@@ -1,6 +1,6 @@
 import "./style.css";
 import { Game } from "./game/game.ts";
-import { loadOrDownloadSong } from "./song/songLoader.ts";
+import { loadOrDownloadSong } from "../songs/songLoader.ts";
 
 const audioPlayerElem: any = document.getElementById("audioPlayer")!;
 
@@ -30,7 +30,7 @@ async function load() {
   game = new Game(songData.difficulties[diffI].notes, songData.lightEvents);
 
   audioPlayerElem.src = URL.createObjectURL(audio);
-  audioPlayerElem.volume = 0.1;
+  audioPlayerElem.volume = 0.5;
   audioPlayerElem.load();
 
 

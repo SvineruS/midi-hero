@@ -1,34 +1,19 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <link rel="icon" type="image/svg+xml" href="/vite.svg"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta https-equiv="Content-Security-Policy" content="default-src *;"/>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MIDI HERO</title>
-    <script type="module" src="/src/main.ts"></script>
-
+    <script>
+      // Redirect when the page is loaded
+      window.onload = function () {
+        if (window.location.hash)
+          window.location.href = '/game.html' + window.location.hash;
+        else
+          window.location.href = '/marketplace.html';
+      };
+    </script>
 </head>
 <body>
-<div id="app"></div>
-<div class="header">
-    <div id="songsList"></div>
-    <div id="totalSize"></div>
-
-    <div>
-        Audio:
-        <audio controls id="audioPlayer" ></audio>
-    </div>
-    <div>
-        Audio delay:
-        <input type="range" min="-1.0" max="0.5" value="0" step="0.001" id="timeOffset" style="width: 500px"/>
-    </div>
-    <div>
-        Easyculty:
-        <input type="range" min="0.03" max="0.1" value="0.05" step="0.01" id="hitTime"/>
-    </div>
-
-</div>
 </body>
 </html>
