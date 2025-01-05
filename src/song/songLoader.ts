@@ -55,15 +55,15 @@ export async function loadSong(songId) {
   }
 }
 
-async function getDownloadedSongs() {
-  const cache = await caches.open(CACHE_NAME);
-  const requests = (await cache.keys()).filter(req => req.url.endsWith("meta.json"));
-  const songElements = [];
-  for (const request of requests) {
-    const response = await cache.match(request);
-    const meta = await response.json();
-    songElements.push(meta);
-  }
-  return songElements;
-}
+// async function getDownloadedSongs() {
+//   const cache = await caches.open(CACHE_NAME);
+//   const requests = (await cache.keys()).filter(req => req.url.endsWith("meta.json"));
+//   const songElements = [];
+//   for (const request of requests) {
+//     const response = await cache.match(request);
+//     const meta = await response.json();
+//     songElements.push(meta);
+//   }
+//   return songElements;
+// }
 
