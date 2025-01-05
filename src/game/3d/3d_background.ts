@@ -12,8 +12,7 @@ const fragmentShader = `
 varying vec2 vUv;
 uniform vec3 iResolution;
 uniform float iTime;
-uniform float iImpulse;
-
+uniform float iVisibility;
 uniform vec3 colorLeft;
 uniform vec3 colorRight;
 uniform vec3 colorCenter1;
@@ -111,7 +110,7 @@ float pattern( in vec2 p )
 }
 
 float gradient(in vec2 coord) {
-  return max(-0.2, 1.-length(coord));
+  return max(-0.2, 1.-length(coord)) * iVisibility;
 }
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
@@ -127,7 +126,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     color += gradient(uv - vec2(0.5, 0.5)) * colorCenter2; 
     color += gradient(uv - vec2(0.5, 0.9)) * colorCenter3; 
    
-   fragColor = vec4(color.rgb, 1.0);
+   fragColor = vec4(color.rgb, 1.);
 }
 
 void main() {
@@ -137,7 +136,7 @@ void main() {
 
 export const backgroundUniforms = {
     iTime: { value: 0 },
-    iImpulse: { value: 0 },
+    iVisibility: { value: 0 },
     iResolution: { value: new THREE.Vector3(window.innerWidth, window.innerHeight, 1) },
     colorLeft: { value: new THREE.Vector3(0, 0, 0) },
     colorRight: { value: new THREE.Vector3(0, 0, 0) },
@@ -155,10 +154,3 @@ const backgroundMat = new THREE.ShaderMaterial({
 backgroundMat.depthWrite = false; // to display in background
 
 export const background = new THREE.Mesh(backgroundPlane, backgroundMat)
-
-
-export const renderBackground = (time: number, impulse: number) => {
-    backgroundUniforms.iTime.value = time;
-    backgroundUniforms.iImpulse.value = impulse;
-}
-

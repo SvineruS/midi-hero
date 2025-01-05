@@ -17,7 +17,6 @@ import { interpolate, lerp } from "../utils.ts";
 import { backgroundUniforms } from "../3d/3d_background.ts";
 import { Game } from "./game.ts";
 import { LightEvent, NoteEvent } from "../../songs/types.ts";
-import * as THREE from "three";
 
 
 export class GameVisuals {
@@ -214,7 +213,7 @@ class BackgroundVisuals {
     this.backgroundTime += delta
     this.lightsIntensity = interpolate(this.lightsIntensity, 0.5, 0.01);
     backgroundUniforms.iTime.value = this.backgroundTime;
-    backgroundUniforms.iImpulse.value = this.lightsIntensity;
+    // backgroundUniforms.iImpulse.value = this.lightsIntensity;
 
 
     funLights.forEach((light, i) => {
@@ -228,6 +227,10 @@ class BackgroundVisuals {
   onNotePlay() {
     this.lightsIntensity = Math.min(1, (this.lightsIntensity * 1.1));
     this.backgroundTime += 0.1;
+  }
+
+  updateVisibility(visibility: number) {
+    backgroundUniforms.iVisibility.value = visibility;
   }
 }
 

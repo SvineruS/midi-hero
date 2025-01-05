@@ -2,12 +2,18 @@ import "./style.css";
 import { Game } from "./game/game.ts";
 import { loadOrDownloadSong } from "../songs/songLoader.ts";
 
-const audioPlayerElem: any = document.getElementById("audioPlayer")!;
+const audioPlayerElem = document.getElementById("audioPlayer")!;
+const hitTimeElem = document.getElementById("hitTime")!;
+const timeOffsetElem = document.getElementById("timeOffset")!;
+const visibilityElem = document.getElementById("visibility")!;
+
 
 // @ts-ignore
-let timeOffset = +document.getElementById("timeOffset")!.value;
+let timeOffset = +hitTimeElem.value;
 // @ts-ignore
-let hitTime = +document.getElementById("hitTime")!.value;
+let hitTime = +timeOffsetElem.value;
+// @ts-ignore
+let visibility = + visibilityElem.value;
 
 
 let game: Game;
@@ -36,8 +42,9 @@ async function load() {
 
   window.addEventListener('resize', game.visuals.resize);
   document.body.addEventListener('keydown', keyPressed);
-  document.getElementById("timeOffset")!.addEventListener('input', changeTimeOffset);
-  document.getElementById("hitTime")!.addEventListener('input', changeHitTime);
+  timeOffsetElem.addEventListener('input', changeTimeOffset);
+  hitTimeElem.addEventListener('input', changeHitTime);
+  visibilityElem.addEventListener('input', (e: any) => game.visuals.backgroundVisuals.updateVisibility(+e.target.value));
 
 
 }
