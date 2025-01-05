@@ -1,66 +1,153 @@
+#define S(a, b, t) smoothstep(a, b, t)
+#define NUM_LAYERS 4.
+
+
 varying vec2 vUv;
 uniform vec3 iResolution;
+
 uniform float iTime;
+uniform float iIntensity;
+uniform vec2 iMouse;
 
 
-vec3 palette(float d) {
-    return mix(vec3(0.2, 0.7, 0.9), vec3(1., 0., 1.), d);
+float N21(vec2 p) {
+    vec3 a = fract(vec3(p.xyx) * vec3(213.897, 653.453, 253.098));
+    a += dot(a, a.yzx + 79.76);
+    return fract((a.x + a.y) * a.z);
 }
 
-vec2 rotate(vec2 p, float a) {
-    float c = cos(a);
-    float s = sin(a);
-    return p * mat2(c, s, -s, c);
+vec2 GetPos(vec2 id, vec2 offs, float t) {
+    float n = N21(id+offs);
+    float n1 = fract(n*10.);
+    float n2 = fract(n*100.);
+    float a = t+n;
+    return offs + vec2(sin(a*n1), cos(a*n2))*.4;
 }
 
-float map(vec3 p) {
-    for (int i = 0; i < 8; ++i) {
-        float t = iTime * 0.2;
-        p.xz = rotate(p.xz, t);
-        p.xy = rotate(p.xy, t * 1.89);
-        p.xz = abs(p.xz);
-        p.xz -= .5;
-    }
-    return dot(sign(p), p) / 5.;
+float GetT(vec2 ro, vec2 rd, vec2 p) {
+    return dot(p-ro, rd);
 }
 
-vec4 rm(vec3 ro, vec3 rd) {
-    float t = 0.;
-    vec3 col = vec3(0.);
-    float d;
-    for (float i = 0.; i < 64.; i++) {
-        vec3 p = ro + rd * t;
-        d = map(p) * .5;
-        if (d < 0.02) {
-            break;
+float LineDist(vec3 a, vec3 b, vec3 p) {
+    return length(cross(b-a, p-a))/length(p-a);
+}
+
+float df_line( in vec2 a, in vec2 b, in vec2 p)
+{
+    vec2 pa = p - a, ba = b - a;
+    float h = clamp(dot(pa,ba) / dot(ba,ba), 0., 1.);
+    return length(pa - ba * h);
+}
+
+float line(vec2 a, vec2 b, vec2 uv) {
+    float r1 = .04;
+    float r2 = .01;
+
+    float d = df_line(a, b, uv);
+    float d2 = length(a-b);
+    float fade = S(1.5, .5, d2);
+
+    fade += S(.05, .02, abs(d2-.75));
+    return S(r1, r2, d)*fade;
+}
+
+float NetLayer(vec2 st, float n, float t) {
+    vec2 id = floor(st)+n;
+
+    st = fract(st)-.5;
+
+    vec2 p[9];
+    int i=0;
+    for(float y=-1.; y<=1.; y++) {
+        for(float x=-1.; x<=1.; x++) {
+            p[i++] = GetPos(id, vec2(x,y), t);
         }
-        if (d > 100.) {
-            break;
-        }
-        //col+=vec3(0.6,0.8,0.8)/(400.*(d));
-        col += palette(length(p) * .1) / (400. * (d));
-        t += d;
     }
-    return vec4(col, 1. / (d * 100.));
+
+    float m = 0.;
+    float sparkle = 0.;
+
+    for(int i=0; i<9; i++) {
+        m += line(p[4], p[i], st);
+
+        float d = length(st-p[i]);
+
+        float s = (.005/(d*d));
+        s *= S(1., .7, d);
+        float pulse = sin((fract(p[i].x)+fract(p[i].y)+t)*5.)*.4+.6;
+        pulse = pow(pulse, 20.);
+
+        s *= pulse;
+        sparkle += s;
+    }
+
+    m += line(p[1], p[3], st);
+    m += line(p[1], p[5], st);
+    m += line(p[7], p[5], st);
+    m += line(p[7], p[3], st);
+
+    float sPhase = (sin(t+n)+sin(t*.1))*.25+.5;
+    sPhase += pow(sin(t*.1)*.5+.5, 50.)*5.;
+    m += sparkle*sPhase;//(*.5+.5);
+
+    return m;
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    vec2 uv = (fragCoord - (iResolution.xy / 2.)) / iResolution.x;
-    vec3 ro = vec3(0., 0., -50.);
-    ro.xz = rotate(ro.xz, iTime);
-    vec3 cf = normalize(-ro);
-    vec3 cs = normalize(cross(cf, vec3(0., 1., 0.)));
-    vec3 cu = normalize(cross(cf, cs));
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    vec2 uv = (fragCoord-iResolution.xy*.5)/iResolution.y;
+    vec2 M = iMouse.xy/iResolution.xy-.5;
 
-    vec3 uuv = ro + cf * 3. + uv.x * cs + uv.y * cu;
+    float t = iTime*.1;
 
-    vec3 rd = normalize(uuv - ro);
+    float s = sin(t);
+    float c = cos(t);
+    mat2 rot = mat2(c, -s, s, c);
+    vec2 st = uv*rot;
+    M *= rot*2.;
 
-    vec4 col = rm(ro, rd);
+    float m = 0.;
+    for(float i=0.; i<1.; i+=1./NUM_LAYERS) {
+        float z = fract(t+i);
+        float size = mix(15., 1., z);
+        float fade = S(0., .6, z)*S(1., .8, z);
+
+        m += fade * NetLayer(st*size-M*z, i, iTime);
+    }
+
+    float fft  = iIntensity;
 
 
-    fragColor = col;
+    vec3 baseCol = vec3(s, cos(t*.4), -sin(t*.24))*.4+.6;
+    vec3 col = vec3(0);
+
+    col += baseCol*m;
+
+    float glow = max(0., -uv.y/2.)*fft*2.;
+    col += baseCol*glow;
+
+
+    float glow2 = max(0., uv.y/2.)*fft*2.;
+    col += baseCol*glow2;
+
+
+
+    float glow3 = max(0., -uv.x/2.)*fft*2.;
+    col += baseCol*glow3;
+
+
+    float glow4 = max(0., uv.x/2.)*fft*2.;
+    col += baseCol*glow4;
+
+
+    col *= 1.-dot(uv,uv);
+    t = mod(iTime, 230.);
+    //col *= S(0., 20., t)*S(224., 200., t);
+
+
+    fragColor = vec4(col,1);
 }
+
 void main() {
     mainImage(gl_FragColor, vUv * iResolution.xy);
 }

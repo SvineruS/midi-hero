@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "@tonejs/midi": "^2.0.28",
+    "bsmap": "^2.1.9",
+    "jszip": "^3.10.1",
     "three": "^0.167.1"
   }
 }

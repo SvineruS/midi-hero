@@ -14,6 +14,12 @@ uniform vec3 iResolution;
 uniform float iTime;
 uniform float iImpulse;
 
+uniform vec3 colorLeft;
+uniform vec3 colorRight;
+uniform vec3 colorCenter1;
+uniform vec3 colorCenter2;
+uniform vec3 colorCenter3;
+
 float colormap_red(float x) {
     if (x < 0.0) {
         return 54.0 / 255.0;
@@ -50,8 +56,8 @@ float colormap_blue(float x) {
     }
 }
 
-vec4 colormap(float x) {
-    return vec4(colormap_red(x), colormap_green(x), colormap_blue(x), 1.0);
+vec3 colormap(float x) {
+    return vec3(colormap_red(x), colormap_green(x), colormap_blue(x));
 }
 
 // https://iquilezles.org/articles/warp
@@ -61,9 +67,9 @@ vec4 colormap(float x) {
     vec2 f = fract(x);
     f = f*f*(3.0-2.0*f);
     float a = textureLod(iChannel0,(p+vec2(0.5,0.5))/256.0,0.0).x;
-\tfloat b = textureLod(iChannel0,(p+vec2(1.5,0.5))/256.0,0.0).x;
-\tfloat c = textureLod(iChannel0,(p+vec2(0.5,1.5))/256.0,0.0).x;
-\tfloat d = textureLod(iChannel0,(p+vec2(1.5,1.5))/256.0,0.0).x;
+		float b = textureLod(iChannel0,(p+vec2(1.5,0.5))/256.0,0.0).x;
+		float c = textureLod(iChannel0,(p+vec2(0.5,1.5))/256.0,0.0).x;
+		float d = textureLod(iChannel0,(p+vec2(1.5,1.5))/256.0,0.0).x;
     return mix(mix( a, b,f.x), mix( c, d,f.x),f.y);
 }*/
 
@@ -101,14 +107,27 @@ float fbm( vec2 p )
 
 float pattern( in vec2 p )
 {
-\treturn fbm( p + fbm( p + fbm( p ) ) );
+		return fbm( p + fbm( p + fbm( p ) ) );
+}
+
+float gradient(in vec2 coord) {
+  return max(-0.5, 1.-length(coord));
 }
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     vec2 uv = fragCoord/iResolution.x;
     float shade = pattern(uv);
-    fragColor = vec4(colormap(shade).rgb, iImpulse);
+    
+    vec3 color = colormap(shade) * 0.5;
+    
+    color += gradient(uv - vec2(0.2, 0.5)) * colorLeft; 
+    color += gradient(uv - vec2(0.8, 0.5)) * colorRight; 
+    color += gradient(uv - vec2(0.5, 0.1)) * colorCenter1; 
+    color += gradient(uv - vec2(0.5, 0.5)) * colorCenter2; 
+    color += gradient(uv - vec2(0.5, 0.9)) * colorCenter3; 
+   
+   fragColor = vec4(color.rgb, 1.0);
 }
 
 void main() {
@@ -120,6 +139,11 @@ export const backgroundUniforms = {
     iTime: { value: 0 },
     iImpulse: { value: 0 },
     iResolution: { value: new THREE.Vector3(window.innerWidth, window.innerHeight, 1) },
+    colorLeft: { value: new THREE.Vector3(0, 0, 0) },
+    colorRight: { value: new THREE.Vector3(0, 0, 0) },
+    colorCenter1: { value: new THREE.Vector3(0, 0, 0) },
+    colorCenter2: { value: new THREE.Vector3(0, 0, 0) },
+    colorCenter3: { value: new THREE.Vector3(0, 0, 0) },
 }
 
 const backgroundPlane = new THREE.PlaneGeometry(2, 2)
