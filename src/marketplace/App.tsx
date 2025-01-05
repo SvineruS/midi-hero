@@ -123,7 +123,7 @@ function Song({ song }) {
 
   function play(e, diffI) {
     e.stopPropagation();
-    const url = `/#${song.id}-${diffI}`;
+    const url = `/midi-hero/#${song.id}-${diffI}`;
     window.open(url, "_blank");
   }
 
