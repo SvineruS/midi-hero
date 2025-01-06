@@ -79,11 +79,8 @@ function animate() {
     game.update(audioPlayerElem.currentTime);
 }
 
-window.onload = () => {
-  console.log("loaded")
-  load();
-  animate();
-}
+load();
+animate();
 
 
 // handlers
