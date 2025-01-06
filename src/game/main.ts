@@ -16,7 +16,7 @@ async function load() {
 
   const timeOffset = StorageUtil.get("timeOffset") || 0;
   const hitTime = StorageUtil.get("hitTime") || 0.05;
-  const visibility = StorageUtil.get("visibility") || 0.5;
+  const visibility = StorageUtil.get("visibility") || 0.25;
   const audioVolume = StorageUtil.get("audioVolume") || 0.5;
 
   console.log("loaded timeOffset", timeOffset, "hitTime", hitTime, "visibility", visibility)

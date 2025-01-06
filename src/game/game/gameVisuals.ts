@@ -6,7 +6,7 @@ import {
   effectLights, effectLightsNamed,
   finish,
   finishLights,
-  funLights, keyHintTexts,
+  funLights,
   LINE_POS,
   POSITION_FINISH,
   POSITION_START,
@@ -77,7 +77,12 @@ class CubesVisuals {
         continue;
       }
 
-      cube.position.z = -lerp(note.time, game.timeNow, game.notes.timeTop, POSITION_FINISH, POSITION_START);
+      let z = lerp(note.time, game.timeNow, game.notes.timeTop, 0, 1);
+      z = Math.pow(z, 3) + z;  // a little easing
+      cube.position.z = -lerp(z, 0, 1, POSITION_FINISH, POSITION_START);
+
+
+
       cube.position.x = LINE_POS[note.note];
       cube.material = this._getCubeMaterial(note);
     }
