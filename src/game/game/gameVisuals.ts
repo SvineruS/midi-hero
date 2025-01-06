@@ -159,7 +159,17 @@ class LightsVisuals {
   lightEffect(le: LightEvent) {
     // console.log("Light effect", le);
     const lightGO = effectLights[le.lightIndex];
-    lightGO.color = this.COLORS[le.colorI];
+    if (!lightGO) {
+      console.error("Invalid light index", le.lightIndex);
+      return;
+    }
+    const color = this.COLORS[le.colorI];
+    if (!color) {
+      console.error("Invalid color index", le.colorI);
+      return;
+    }
+
+    lightGO.color = color;
 
     if (le.modeI == 1) lightGO.intensity = this.INTENSITY;
     else if (le.modeI == 2 || le.modeI == 3) lightGO.intensity = this.INTENSITY*2;
