@@ -6,6 +6,8 @@ import { GameNotes } from "./gameNotes.ts";
 
 export class Game {
   timeNow = 0;
+  timeOffset = 0;
+
   combo: Combo;
   visuals: GameVisuals;
   notes: GameNotes;
@@ -20,6 +22,7 @@ export class Game {
 
 
   update(timeNow: number) {
+    timeNow += this.timeOffset;
     const delta = timeNow - this.timeNow;
 
     this.timeNow = timeNow;
@@ -33,6 +36,10 @@ export class Game {
 
   click(line: 1 | 2 | 3 | 4) {
     this.notes.click(line);
+  }
+
+  setTimeOffset(timeOffset: number) {
+    this.timeOffset = timeOffset;
   }
 
   setHitWindow(hitWindow: number) {

@@ -1,24 +1,30 @@
 import "./style.css";
 import { Game } from "./game/game.ts";
 import { loadOrDownloadSong } from "../songs/songLoader.ts";
+import { StorageUtil } from "../settings/settings.ts";
 
-const audioPlayerElem = document.getElementById("audioPlayer")!;
-const hitTimeElem = document.getElementById("hitTime")!;
-const timeOffsetElem = document.getElementById("timeOffset")!;
-const visibilityElem = document.getElementById("visibility")!;
-
-
-// @ts-ignore
-let timeOffset = +hitTimeElem.value;
-// @ts-ignore
-let hitTime = +timeOffsetElem.value;
-// @ts-ignore
-let visibility = + visibilityElem.value;
+const audioPlayerElem = document.getElementById("audioPlayer") as HTMLAudioElement;
+const hitTimeElem = document.getElementById("hitTime") as HTMLInputElement;
+const timeOffsetElem = document.getElementById("timeOffset") as HTMLInputElement;
+const visibilityElem = document.getElementById("visibility") as HTMLInputElement;
 
 
 let game: Game;
 
+
 async function load() {
+
+  const timeOffset = StorageUtil.get("timeOffset") || 0;
+  const hitTime = StorageUtil.get("hitTime") || 0.05;
+  const visibility = StorageUtil.get("visibility") || 0.5;
+  const audioVolume = StorageUtil.get("audioVolume") || 0.5;
+
+  console.log("loaded timeOffset", timeOffset, "hitTime", hitTime, "visibility", visibility)
+
+  hitTimeElem.value = hitTime;
+  timeOffsetElem.value = timeOffset;
+  visibilityElem.value = visibility;
+
 
   let [songId, diffI] = location.hash.substring(1).split("-")
   if (!songId) {
@@ -36,15 +42,32 @@ async function load() {
   game = new Game(songData.difficulties[diffI].notes, songData.lightEvents);
 
   audioPlayerElem.src = URL.createObjectURL(audio);
-  audioPlayerElem.volume = 0.5;
+  audioPlayerElem.volume = audioVolume;
   audioPlayerElem.load();
+
+
+  game.setTimeOffset(timeOffset);
+  game.setHitWindow(hitTime);
+  game.visuals.backgroundVisuals.updateVisibility(visibility)
+
 
 
   window.addEventListener('resize', game.visuals.resize);
   document.body.addEventListener('keydown', keyPressed);
-  timeOffsetElem.addEventListener('input', changeTimeOffset);
-  hitTimeElem.addEventListener('input', changeHitTime);
-  visibilityElem.addEventListener('input', (e: any) => game.visuals.backgroundVisuals.updateVisibility(+e.target.value));
+
+
+  timeOffsetElem.addEventListener('input', (e: any) => {
+    game.setTimeOffset(+e.target.value);
+    StorageUtil.set("timeOffset", +e.target.value)
+  });
+  hitTimeElem.addEventListener('input', (e: any) => {
+    game.setHitWindow(+e.target.value)
+    StorageUtil.set("hitTime", +e.target.value)
+  });
+  visibilityElem.addEventListener('input', (e: any) => {
+    game.visuals.backgroundVisuals.updateVisibility(+e.target.value)
+    StorageUtil.set("visibility", +e.target.value)
+  });
 
 
 }
@@ -53,11 +76,14 @@ async function load() {
 function animate() {
   requestAnimationFrame(animate);
   if (game)
-    game.update(audioPlayerElem.currentTime + timeOffset);
+    game.update(audioPlayerElem.currentTime);
 }
 
-animate();
-load();
+window.onload = () => {
+  console.log("loaded")
+  load();
+  animate();
+}
 
 
 // handlers
@@ -77,18 +103,4 @@ function keyPressed(e: any) {
   game.click(keyId);
   e.preventDefault();
 }
-
-
-function changeTimeOffset(e: any) {
-  timeOffset = +e.target.value;
-  console.log(timeOffset)
-}
-
-function changeHitTime(e: any) {
-  game.setHitWindow(+e.target.value);
-  console.log(+e.target.value)
-}
-
-
-
 
