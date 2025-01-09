@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { StorageUtil } from "../../settings/settings.ts";
 
 // Create Context
 const AudioContext = createContext();
@@ -12,6 +13,7 @@ export function AudioProvider({ children }) {
   const playAudio = useCallback((url) => {
     stopAudio();
     const audio = new Audio(url);
+    audio.volume = StorageUtil.get("audioVolume") ?? 0.5;
     audio.play();
     setCurrentAudio(audio);
     setCurrentUrl(url);

@@ -59,7 +59,7 @@ export const funLights = [funLight(0xee22ee, 2), funLight(0xee44ee, 5), funLight
 
 
 const finishLight = (line) => {
-  const light = new THREE.PointLight(0x0000000, 0, 100);
+  const light = new THREE.PointLight(0x0000000, 0, 50);
   light.position.set(LINE_POS[line], 1, -POSITION_FINISH);
   scene.add(light);
   return light
@@ -105,14 +105,14 @@ scene.add(floor);
 
 
 const finishGeometry = new THREE.BoxGeometry(5, 1, 0.1);
-const finishMaterial = new THREE.MeshStandardMaterial({ color: 0xee11111 });
+const finishMaterial = new THREE.MeshStandardMaterial({ color: 0xffff11 });
 export const finish = new THREE.Mesh(finishGeometry, finishMaterial);
 finish.position.set(0, -0.4, -POSITION_FINISH);
 scene.add(finish);
 
 
 const trackGeometry = new THREE.BoxGeometry(1, 0.1, 1000);
-const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 });
+const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x111111});
 const addTrack = (line: number) => {
   const track1 = new THREE.Mesh(trackGeometry, trackMaterial);
   track1.position.x = LINE_POS[line];

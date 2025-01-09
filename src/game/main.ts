@@ -14,10 +14,10 @@ let game: Game;
 
 async function load() {
 
-  const timeOffset = StorageUtil.get("timeOffset") || 0;
-  const hitTime = StorageUtil.get("hitTime") || 0.05;
-  const visibility = StorageUtil.get("visibility") || 0.25;
-  const audioVolume = StorageUtil.get("audioVolume") || 0.5;
+  const timeOffset = StorageUtil.get("timeOffset") ?? 0;
+  const hitTime = StorageUtil.get("hitTime") || 0.075;
+  const visibility = StorageUtil.get("visibility") ?? 0.25;
+  const audioVolume = StorageUtil.get("audioVolume") ?? 0.5;
 
   console.log("loaded timeOffset", timeOffset, "hitTime", hitTime, "visibility", visibility)
 
@@ -51,7 +51,6 @@ async function load() {
   game.visuals.backgroundVisuals.updateVisibility(visibility)
 
 
-
   window.addEventListener('resize', game.visuals.resize);
   document.body.addEventListener('keydown', keyPressed);
 
@@ -68,15 +67,22 @@ async function load() {
     game.visuals.backgroundVisuals.updateVisibility(+e.target.value)
     StorageUtil.set("visibility", +e.target.value)
   });
-
+  audioPlayerElem.addEventListener('volumechange', (e: any) => {
+    StorageUtil.set("audioVolume", audioPlayerElem.volume)
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) audioPlayerElem.pause();
+  });
 
 }
 
 
 function animate() {
   requestAnimationFrame(animate);
-  if (game)
-    game.update(audioPlayerElem.currentTime);
+  if (!game) return;
+  if (document.hidden) return;
+
+  game.update(audioPlayerElem.currentTime);
 }
 
 load();
@@ -85,7 +91,7 @@ animate();
 
 // handlers
 
-const KEYS = { 's': 0, 'd': 1, 'k': 2, 'l': 3, } as const;
+const KEYS = { 'KeyS': 0, 'KeyD': 1, 'KeyK': 2, 'KeyL': 3, } as const;
 
 function keyPressed(e: any) {
   if (e.key == " ") {
@@ -95,7 +101,7 @@ function keyPressed(e: any) {
     return;
   }
 
-  const keyId = KEYS[e.key];
+  const keyId = KEYS[e.code];
   if (keyId == undefined) return;
   game.click(keyId);
   e.preventDefault();

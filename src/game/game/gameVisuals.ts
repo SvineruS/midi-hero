@@ -201,7 +201,7 @@ class FinishVisuals {
   }
 
   onHitOrMiss(isHit: boolean, line: number) {
-    finishLights[line].intensity = 100;
+    finishLights[line].intensity = 200;
     finishLights[line].color = isHit ? this.COLOR_GREEN : this.COLOR_RED;
     // keyHintTexts[line].material = isHit ? new THREE.MeshBasicMaterial({ color: 0x00ff00 }) : new THREE.MeshBasicMaterial({ color: 0xff0000 });
     this.visuals.backgroundVisuals.onNotePlay()
@@ -225,7 +225,7 @@ class BackgroundVisuals {
   update(delta: number) {
     const timeNow = this.visuals.timeNow();
 
-    this.backgroundTime += delta
+    this.backgroundTime += delta + 0.001
     this.lightsIntensity = interpolate(this.lightsIntensity, 0.5, 0.01);
     backgroundUniforms.iTime.value = this.backgroundTime;
     // backgroundUniforms.iImpulse.value = this.lightsIntensity;
