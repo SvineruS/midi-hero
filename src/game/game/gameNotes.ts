@@ -110,8 +110,7 @@ export class GameNotes {
 
   onFail(line: number, isUserInput = false) {
     this.game.combo.onFail();
-    if (isUserInput)
-      this.game.visuals.finishVisuals.onHitOrMiss(false, line)
+    this.game.visuals.finishVisuals.onHitOrMiss(false, line);
   }
 
   onSuccess(line: number) {
