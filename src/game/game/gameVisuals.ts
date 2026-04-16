@@ -11,8 +11,8 @@ import {
   POSITION_FINISH,
   POSITION_START,
   renderer,
-  scene
 } from "../3d/3d.ts";
+import { composer } from "../3d/post.ts";
 import { interpolate, lerp } from "../utils.ts";
 import { backgroundUniforms } from "../3d/3d_background.ts";
 import { Game } from "./game.ts";
@@ -42,7 +42,7 @@ export class GameVisuals {
     this.lightsVisuals.update();
     this.backgroundVisuals.update(delta);
 
-    renderer.render(scene, camera);
+    composer.render();
   }
 
   timeNow() {
@@ -53,6 +53,7 @@ export class GameVisuals {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
   }
 
 
@@ -180,7 +181,7 @@ class LightsVisuals {
   }
 
   setBackgroundColor(uniformVar, light3d) {
-    const int = light3d.intensity / this.INTENSITY;
+    const int = Math.min(1, light3d.intensity / this.INTENSITY);
     uniformVar.value.set(light3d.color.r * int, light3d.color.g * int, light3d.color.b * int);
   }
 
@@ -191,20 +192,31 @@ class FinishVisuals {
   COLOR_RED = new Color(0xff0000);
   COLOR_GREEN = new Color(0x00ff00);
 
+  failFlashElem = document.getElementById("failFlash");
+
 
   constructor(public visuals: GameVisuals,) {
   }
 
   update() {
     finishLights.forEach((light) =>
-      light.intensity = interpolate(light.intensity, 0, 0.1));
+      light.intensity = interpolate(light.intensity, 0, 0.06));
   }
 
   onHitOrMiss(isHit: boolean, line: number) {
-    finishLights[line].intensity = 200;
+    finishLights[line].intensity = 150;
     finishLights[line].color = isHit ? this.COLOR_GREEN : this.COLOR_RED;
     // keyHintTexts[line].material = isHit ? new THREE.MeshBasicMaterial({ color: 0x00ff00 }) : new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    if (!isHit) this.flashFail();
     this.visuals.backgroundVisuals.onNotePlay()
+  }
+
+  flashFail() {
+    if (!this.failFlashElem) return;
+    this.failFlashElem.animate(
+      [{ opacity: 0.9 }, { opacity: 0 }],
+      { duration: 280, easing: "ease-out" },
+    );
   }
 
   setFinishSize(HIT_TIME: number, DISPLAY_TIME_TOP: number) {

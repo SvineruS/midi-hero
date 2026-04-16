@@ -8,6 +8,7 @@ export class Combo {
     hits = 0;
     fails = 0;
     combo = 0;
+    maxCombo = 0;
     score = 0;
 
 
@@ -19,6 +20,7 @@ export class Combo {
     onSuccess() {
         this.hits++;
         this.combo++;
+        if (this.combo > this.maxCombo) this.maxCombo = this.combo;
         this.score += this.combo > COMBO_SCORES.length-1 ? COMBO_SCORES[COMBO_SCORES.length - 1] : COMBO_SCORES[this.combo];
         this._updateText()
     }

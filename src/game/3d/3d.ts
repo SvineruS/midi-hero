@@ -20,6 +20,7 @@ scene.fog = new THREE.FogExp2(0xfeaafe, 0.003);
 
 
 export const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -27,22 +28,6 @@ document.body.appendChild(renderer.domElement);
 export const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 600);
 camera.position.set(0, 5, 12)
 camera.rotation.x = Math.PI * -0.1;
-
-
-//// LIGHTS
-
-// global lights
-
-const light = new THREE.AmbientLight(0x404040, 1); // soft white light
-scene.add(light);
-
-const directionalLight = new THREE.DirectionalLight(0xefeeee, 1.1);
-scene.add(directionalLight);
-
-// const farLight = new THREE.PointLight(0xeeeeee, 100000, 500);
-// farLight.position.set(0, 10, -300);
-// scene.add(farLight)
-
 
 // fun lights
 
@@ -60,7 +45,7 @@ export const funLights = [funLight(0xee22ee, 2), funLight(0xee44ee, 5), funLight
 
 const finishLight = (line) => {
   const light = new THREE.PointLight(0x0000000, 0, 50);
-  light.position.set(LINE_POS[line], 1, -POSITION_FINISH);
+  light.position.set(LINE_POS[line], 1, POSITION_FINISH + 0.5);
   scene.add(light);
   return light
 }
@@ -98,21 +83,25 @@ export const effectLights = [effectLightsNamed.center1, effectLightsNamed.center
 ///// OBJECTS
 
 const floorGeometry = new THREE.PlaneGeometry(5, 1000);
-const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x050510 });
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
 
 
 const finishGeometry = new THREE.BoxGeometry(5, 1, 0.1);
-const finishMaterial = new THREE.MeshStandardMaterial({ color: 0xffff11 });
+const finishMaterial = new THREE.MeshStandardMaterial({
+  color: 0xffff11,
+  emissive: 0xffff11,
+  emissiveIntensity: 0.4,
+});
 export const finish = new THREE.Mesh(finishGeometry, finishMaterial);
 finish.position.set(0, -0.4, -POSITION_FINISH);
 scene.add(finish);
 
 
 const trackGeometry = new THREE.BoxGeometry(1, 0.1, 1000);
-const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x111111});
+const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x0a0a18 });
 const addTrack = (line: number) => {
   const track1 = new THREE.Mesh(trackGeometry, trackMaterial);
   track1.position.x = LINE_POS[line];
@@ -122,17 +111,45 @@ for (let i = 0; i < 4; i++)
   addTrack(i);
 
 
+// glowing lane edge strips (alternating cyan/magenta)
+const LANE_EDGE_X = [-2.3, -1.2, 0, 1.2, 2.3];
+const LANE_EDGE_COLORS = [0x50e2e3, 0xf164ec, 0x50e2e3, 0xf164ec, 0x50e2e3];
+const laneEdgeGeometry = new THREE.BoxGeometry(0.04, 0.02, 1000);
+LANE_EDGE_X.forEach((x, i) => {
+  const material = new THREE.MeshStandardMaterial({
+    color: LANE_EDGE_COLORS[i],
+    emissive: LANE_EDGE_COLORS[i],
+    emissiveIntensity: 1.7,
+  });
+  const strip = new THREE.Mesh(laneEdgeGeometry, material);
+  strip.position.set(x, 0.06, 0);
+  scene.add(strip);
+});
+
+
 export const cubes: THREE.Mesh<any>[] = [];
 
 export const cubeMaterial = {
-  NEUTRAL: new THREE.MeshStandardMaterial({ color: 0xeeeeee }),
-  SUCCESS: new THREE.MeshStandardMaterial({ color: 0x22ee22}),
-  FAILED: new THREE.MeshStandardMaterial({ color: 0xee2222}),
+  NEUTRAL: new THREE.MeshStandardMaterial({
+    color: 0x8890b0,
+    emissive: 0x3355ff,
+    emissiveIntensity: 0.3,
+  }),
+  SUCCESS: new THREE.MeshStandardMaterial({
+    color: 0x2a6030,
+    emissive: 0x22ff55,
+    emissiveIntensity: 0.9,
+  }),
+  FAILED: new THREE.MeshStandardMaterial({
+    color: 0x903030,
+    emissive: 0xff1133,
+    emissiveIntensity: 1.6,
+  }),
 }
 
 const cubeGeometry = new THREE.BoxGeometry(1, 0.6, 1);
 const addCube = () => {
-  const cube = new THREE.Mesh(cubeGeometry, new THREE.MeshStandardMaterial({ color: 0xeeeeee }));
+  const cube = new THREE.Mesh(cubeGeometry, cubeMaterial.NEUTRAL);
   cube.position.z = POSITION_START;
   cubes.push(cube);
   scene.add(cube);
@@ -149,8 +166,6 @@ const font: Font = await new Promise((resolve, reject) => {
 });
 
 
-const textMatBlack = new THREE.MeshBasicMaterial({ color: 0x111111 });
-
 export const createText = (message: string, size: number = 0.5) => {
   const shapes = font.generateShapes(message, size);
   const geometry = new THREE.ShapeGeometry(shapes);
@@ -161,12 +176,11 @@ export const createText = (message: string, size: number = 0.5) => {
   return geometry;
 }
 
-export const text1 = new THREE.Mesh(createText('   Score: 0\n   Combo: 0\n   Hits: 0\n   Fails: 0'), textMatBlack);
+const textMatWhite = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+export const text1 = new THREE.Mesh(createText('   Score: 0\n   Combo: 0\n   Hits: 0\n   Fails: 0'), textMatWhite);
 text1.position.set(-5, 2, -15);
 scene.add(text1);
-
-
-const textMatWhite = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
 
 function createKeyHintsText(line, message) {
