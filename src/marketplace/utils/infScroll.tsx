@@ -1,17 +1,20 @@
-import { useInView } from "react-intersection-observer";
-import { useEffect } from "react";
+import { useEffect, useRef } from "preact/hooks";
 
-export function InfiniteScroll({ loadMore }) {
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-  });
+export function InfiniteScroll({ loadMore }: { loadMore: () => void }) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef(loadMore);
+  loadMoreRef.current = loadMore;
 
   useEffect(() => {
-    if (inView) {
-      loadMore();
-    }
-  }, [inView, loadMore]);
+    const el = sentinelRef.current;
+    if (!el) return;
 
-  return <div ref={ref} style={{ height: "10px" }}/>;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) loadMoreRef.current();
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return <div ref={sentinelRef} style={{ height: "10px" }}/>;
 }
-

@@ -1,25 +1,17 @@
-import { StrictMode } from "react";
-import { createRoot, Root } from "react-dom/client";
+import { render } from "preact";
 import "./marketplace/index.css";
 import App from "./marketplace/App.tsx";
 
 const marketplaceContainer = document.getElementById("marketplace-container")!;
 const gameContainer = document.getElementById("game-container")!;
-let reactRoot: Root | null = null;
+const rootEl = document.getElementById("root")!;
 
 function showMarketplace() {
   gameContainer.style.display = "none";
   marketplaceContainer.style.display = "";
   location.hash = "";
 
-  if (!reactRoot) {
-    reactRoot = createRoot(document.getElementById("root")!);
-  }
-  reactRoot.render(
-    <StrictMode>
-      <App onPlay={startGame} />
-    </StrictMode>
-  );
+  render(<App onPlay={startGame} />, rootEl);
 }
 
 async function startGame(songId: string, diffI: number) {

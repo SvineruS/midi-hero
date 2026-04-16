@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import { createContext } from "preact";
+import { useContext, useState, useCallback } from "preact/hooks";
 import { StorageUtil } from "../../settings/settings.ts";
 
 // Create Context

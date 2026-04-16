@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { FaGamepad, FaHeart, FaPlay, FaSearch, FaStop, FaTrashAlt } from "react-icons/fa";
 import { searchSongs } from "../songs/bsApi.ts";
 import { AudioProvider, useAudio } from "./utils/audioContext.tsx";
@@ -23,6 +23,7 @@ function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void })
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   async function onSubmit(query_) {
     const results = await searchSongs(query_);
@@ -31,11 +32,14 @@ function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void })
     setSearchResults(results);
   }
 
-  async function loadMore(newPage) {
-    if (page == newPage) return;
-    const results = await searchSongs(query, newPage);
-    setPage(newPage);
-    setSearchResults(searchResults => [...searchResults, ...results]);
+  async function loadNextPage() {
+    if (loading) return;
+    setLoading(true);
+    const nextPage = page + 1;
+    const results = await searchSongs(query, nextPage);
+    setPage(nextPage);
+    setSearchResults(prev => [...prev, ...results]);
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -54,11 +58,7 @@ function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void })
 
       <SongList songs={searchResults} onPlay={onPlay}/>
 
-
-      <button onClick={() => loadMore(page + 1)}
-              className="px-6 py-3 mt-20 text-lg font-medium text-white bg-blue-600 rounded-md shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500 transition-all"
-      >Load More
-      </button>
+      <InfiniteScroll loadMore={loadNextPage}/>
     </div>
   )
 }

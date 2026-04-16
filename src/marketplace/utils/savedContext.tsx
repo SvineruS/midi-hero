@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext } from "preact";
+import { useContext, useState, useEffect, useCallback } from "preact/hooks";
 import * as songLoader from "../../songs/songLoader.ts";
 
 // Create context
