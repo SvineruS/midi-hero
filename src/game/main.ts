@@ -12,6 +12,21 @@ function formatSeconds(seconds: number) {
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
+function cloneNotes(notes: any[]) {
+  return notes.map(n => ({ ...n, status: undefined }));
+}
+
+function getGrade(accuracy: number) {
+  if (accuracy >= 1) return { letter: "S+", color: "#50e2e3" };
+  if (accuracy >= 0.99) return { letter: "S", color: "#50e2e3" };
+  if (accuracy >= 0.95) return { letter: "A", color: "#4ade80" };
+  if (accuracy >= 0.85) return { letter: "B", color: "#a3e635" };
+  if (accuracy >= 0.75) return { letter: "C", color: "#eab308" };
+  if (accuracy >= 0.60) return { letter: "D", color: "#f97316" };
+  if (accuracy >= 0.40) return { letter: "E", color: "#ef4444" };
+  return { letter: "F", color: "#991b1b" };
+}
+
 const KEYS = { 'KeyS': 0, 'KeyD': 1, 'KeyK': 2, 'KeyL': 3 } as const;
 
 const GAME_HTML = `
@@ -59,7 +74,7 @@ const GAME_HTML = `
 </div>
 <div id="endOverlay" class="overlay hidden">
     <div class="panel">
-        <h1>Song complete</h1>
+        <div id="endGrade" class="grade"></div>
         <div class="stats">
             <div><span>Score</span><strong id="endScore"></strong></div>
             <div><span>Accuracy</span><strong id="endAccuracy"></strong></div>
@@ -139,6 +154,7 @@ export async function initGame(
   const startDurationElem = $(container, "#startDuration") as HTMLElement;
   const startNpsElem = $(container, "#startNps") as HTMLElement;
   const endOverlayElem = $(container, "#endOverlay") as HTMLDivElement;
+  const endGradeElem = $(container, "#endGrade") as HTMLElement;
   const endScoreElem = $(container, "#endScore") as HTMLElement;
   const endAccuracyElem = $(container, "#endAccuracy") as HTMLElement;
   const endMaxComboElem = $(container, "#endMaxCombo") as HTMLElement;
@@ -168,7 +184,7 @@ export async function initGame(
   // Load song
   const { audio, meta, songData } = await loadOrDownloadSong(songId);
   const difficulty = meta.difficulties[+diffI] ?? meta.difficulties[0];
-  game = new Game(songData.difficulties[diffI].notes, songData.lightEvents, meta, difficulty);
+  game = new Game(cloneNotes(songData.difficulties[diffI].notes), songData.lightEvents, meta, difficulty);
 
   audioPlayerElem.src = URL.createObjectURL(audio);
   audioPlayerElem.volume = audioVolume;
@@ -202,15 +218,22 @@ export async function initGame(
 
   function onSongEnd() {
     const stats = game.getStats();
+    const grade = getGrade(stats.accuracy);
+    endGradeElem.textContent = grade.letter;
+    endGradeElem.style.color = grade.color;
+    endGradeElem.style.textShadow = `0 0 40px ${grade.color}, 0 0 80px ${grade.color}`;
     endScoreElem.textContent = String(stats.score);
     endAccuracyElem.textContent = `${(stats.accuracy * 100).toFixed(1)}%`;
     endMaxComboElem.textContent = String(stats.maxCombo);
     endHitsElem.textContent = String(stats.hits);
     endFailsElem.textContent = String(stats.fails);
     endOverlayElem.classList.remove("hidden");
+    gameStarted = false;
   }
 
   function keyPressed(e: any) {
+    if (!endOverlayElem.classList.contains("hidden")) return;
+
     if (e.key == " ") {
       if (!gameStarted) {
         startGameplay();
@@ -237,7 +260,7 @@ export async function initGame(
     startOverlayElem.classList.remove("hidden");
     startOverlayElem.querySelector(".panel")!.classList.remove("loading");
     gameStarted = false;
-    game = new Game(songData.difficulties[diffI].notes, songData.lightEvents, meta, difficulty);
+    game = new Game(cloneNotes(songData.difficulties[diffI].notes), songData.lightEvents, meta, difficulty);
     game.setTimeOffset(timeOffset);
     game.setHitWindow(hitTime);
     game.visuals.backgroundVisuals.updateVisibility(visibility);

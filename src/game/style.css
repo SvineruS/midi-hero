@@ -334,12 +334,19 @@ kbd {
     align-items: stretch;
 }
 
-#endOverlay h1 {
-    font-size: 32px;
-    font-weight: 700;
-    color: #ffffff;
-    text-shadow: 0 0 16px rgba(241, 100, 236, 0.8);
+.grade {
+    font-size: 120px;
+    font-weight: 900;
+    line-height: 1;
     text-align: center;
+    letter-spacing: -4px;
+    animation: gradeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes gradeIn {
+    0%   { transform: scale(2.5); opacity: 0; }
+    60%  { transform: scale(0.95); opacity: 1; }
+    100% { transform: scale(1); }
 }
 
 .stats {

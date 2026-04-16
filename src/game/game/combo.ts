@@ -11,6 +11,9 @@ export class Combo {
     maxCombo = 0;
     score = 0;
 
+    constructor() {
+        this._updateText();
+    }
 
     onFail() {
         this.fails++;
