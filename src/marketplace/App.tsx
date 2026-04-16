@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { FaGamepad, FaHeart, FaPlay, FaSearch, FaStop, FaTrashAlt } from "react-icons/fa";
 import { searchSongs } from "../songs/bsApi.ts";
 import { AudioProvider, useAudio } from "./utils/audioContext.tsx";
@@ -9,14 +9,17 @@ function App({ onPlay }: { onPlay: (songId: string, diffI: number) => void }) {
   return (
     <AudioProvider>
       <SavedSongsProvider>
-        <div className="p-8 flex flex-col items-center gap-4">
+        <div className="min-h-screen px-4 py-8 sm:px-8">
+          <h1 className="text-center text-4xl sm:text-5xl font-extrabold mb-10 tracking-tight"
+              style={{ color: "#fff", textShadow: "0 0 30px rgba(80,226,227,0.5), 0 0 60px rgba(241,100,236,0.3)" }}>
+            MIDI HERO
+          </h1>
           <SavedSongs onPlay={onPlay}/>
           <Search onPlay={onPlay}/>
         </div>
       </SavedSongsProvider>
     </AudioProvider>
   )
-
 }
 
 function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void }) {
@@ -46,19 +49,15 @@ function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void })
     onSubmit("");
   }, []);
 
-
   return (
-    <div className="p-8 flex flex-col items-center gap-4">
-
-      <h1 className="text-2xl font-bold text-gray-800">Search for a Song</h1>
-
-      <div className="w-full max-w-2xl">
+    <div className="flex flex-col items-center gap-6">
+      <h2 className="text-xl font-semibold text-gray-300">Search for a Song</h2>
+      <div className="w-full max-w-xl">
         <SearchBar onSubmit={onSubmit}/>
       </div>
-
       <SongList songs={searchResults} onPlay={onPlay}/>
-
       <InfiniteScroll loadMore={loadNextPage}/>
+      {loading && <div className="text-sm text-gray-500">Loading...</div>}
     </div>
   )
 }
@@ -69,51 +68,51 @@ function SearchBar({ onSubmit }) {
     await onSubmit(e.target.searchInput.value);
   }
 
-
   return (
-    <form onSubmit={search} className="flex items-center bg-white rounded-lg shadow-md p-2">
-      <FaSearch className="text-gray-400 w-5 h-5 ml-2"/>
+    <form onSubmit={search}
+          className="search-bar flex items-center rounded-lg p-2 border transition-colors focus-within:border-cyan-500/60">
+      <FaSearch className="w-4 h-4 ml-2 text-gray-500 flex-shrink-0"/>
       <input type="text" name="searchInput" placeholder="Song name or author"
-             className="flex-grow ml-2 bg-transparent border-none outline-none text-gray-800 text-sm"/>
+             className="flex-grow ml-3 bg-transparent border-none outline-none text-gray-200 text-sm placeholder-gray-500"/>
       <button type="submit"
-              className="ml-2 px-4 py-1 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 transition">
+              className="btn-search ml-2 px-4 py-1.5 rounded-md text-sm font-medium transition flex-shrink-0">
         Search
       </button>
     </form>
   );
 }
 
-
 function SavedSongs({ onPlay }: { onPlay: (songId: string, diffI: number) => void }) {
-  const { savedSongs } = useSavedSongs(); // Use the saved songs context
+  const { savedSongs } = useSavedSongs();
+  if (!savedSongs.length) return null;
 
-  return <div className="p-8 flex flex-col items-center gap-4">
-    <h1 className="text-2xl font-bold text-gray-800">Saved songs</h1>
-    <SongList songs={savedSongs} onPlay={onPlay}/>
-  </div>
-
+  return (
+    <div className="flex flex-col items-center gap-4 mb-10 w-full">
+      <h2 className="text-xl font-semibold text-gray-300">Saved Songs</h2>
+      <SongList songs={savedSongs} onPlay={onPlay}/>
+    </div>
+  )
 }
-
 
 function SongList({ songs, onPlay }: { songs: any[], onPlay: (songId: string, diffI: number) => void }) {
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
       {songs.map(song => <Song key={song.id} song={song} onPlay={onPlay}/>)}
     </div>
   );
 }
 
 function Song({ song, onPlay }: { song: any, onPlay: (songId: string, diffI: number) => void }) {
-  const { currentUrl, playAudio, stopAudio } = useAudio(); // Use the audio context
+  const { currentUrl, playAudio, stopAudio } = useAudio();
   const isPlaying = currentUrl == song.previewURL;
 
-  const { savedSongs, saveSong, removeSong } = useSavedSongs(); // Use the saved songs context
+  const { savedSongs, saveSong, removeSong } = useSavedSongs();
   const [isSaved, setIsSaved] = useState("no");
 
   useEffect(() => {
-    setIsSaved(savedSongs.some(savedSong => savedSong.id === song.id) ? "yes" : "no");
+    const saved = savedSongs.find(s => s.id === song.id);
+    setIsSaved(saved ? (saved._removed ? "no" : "yes") : "no");
   }, [savedSongs, song.id]);
-
 
   function listen(e) {
     e.stopPropagation();
@@ -128,14 +127,11 @@ function Song({ song, onPlay }: { song: any, onPlay: (songId: string, diffI: num
 
   async function save(e) {
     e.stopPropagation();
-
     if (isSaved == "yes") {
-      // Remove the song from saved songs
       setIsSaved("removing");
       await removeSong(song.id);
       setIsSaved("no");
     } else if (isSaved == "no") {
-      // Save the song
       setIsSaved("saving");
       try {
         await saveSong(song);
@@ -147,71 +143,56 @@ function Song({ song, onPlay }: { song: any, onPlay: (songId: string, diffI: num
     }
   }
 
+  const isSavedOrSaving = isSaved == "yes" || isSaved == "saving";
+  const isTransitioning = isSaved == "saving" || isSaved == "removing";
 
   return (
-    <div
-      className="p-3 bg-white rounded-lg shadow-md hover:shadow-lg hover:bg-gray-100 cursor-pointer transition w-96">
+    <div className="card-song rounded-lg p-3 transition hover:scale-[1.01]">
 
-      <div className="text-base font-bold text-gray-600 group-hover:text-blue-600">
-        <span>{song.songAuthor}</span>
-        {" - "}
-        <span className="text-gray-700 group-hover:text-blue-600">{song.songName}</span>
+      <div className="text-sm font-semibold mb-2 truncate">
+        <span className="text-gray-400">{song.songAuthor}</span>
+        {" — "}
+        <span className="text-gray-200">{song.songName}</span>
       </div>
 
-      <div className="flex items-start">
-        <div>
-          <img src={song.coverURL} alt={song.songName} className="w-20 h-20 object-cover rounded-md flex-shrink-0"/>
+      <div className="flex gap-3">
+        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+          <img src={song.coverURL} alt={song.songName}
+               className="w-20 h-20 object-cover rounded-md"/>
 
+          <button onClick={listen}
+                  className={`btn-listen${isPlaying ? " active" : ""} w-20 flex items-center justify-center gap-1.5 px-2 py-1 text-xs rounded transition`}>
+            {isPlaying ? <><FaStop/> Stop</> : <><FaPlay/> Listen</>}
+          </button>
 
-          {/* Action Buttons */}
-          <div className="mt-2 flex flex-col gap-1 justify-between">
-
-            <button onClick={listen}
-                    className={`flex items-center gap-2 px-2 py-1 text-white rounded shadow focus:outline-none transition bg-blue-500 hover:bg-blue-600`}>
-              {isPlaying ? <><FaStop/> Stop</> : <><FaPlay/> Listen</>}
-            </button>
-
-            <button onClick={save}
-                    className={`flex items-center gap-2 px-2 py-1 text-white rounded shadow focus:outline-none transition
-                    ${(isSaved == "yes" || isSaved == "saving") ? 'bg-red-500 hover:bg-red-600' : 'bg-yellow-500 hover:bg-yellow-600'}
-                    ${(isSaved == "saving" || isSaved == "removing") ? 'disabled' : ''}`}
-            >
-              {(isSaved == "yes" || isSaved == "saving") ? (<><FaTrashAlt/> Remove </>) : (<><FaHeart/> Save </>)}
-            </button>
-
-          </div>
+          <button onClick={save}
+                  className={`btn-save${isSavedOrSaving ? " saved" : ""} w-20 flex items-center justify-center gap-1.5 px-2 py-1 text-xs rounded transition`}
+                  style={{ opacity: isTransitioning ? 0.5 : 1 }}>
+            {isSavedOrSaving ? <><FaTrashAlt/> Remove</> : <><FaHeart/> Save</>}
+          </button>
         </div>
 
-        {/* Song Details */}
-        <div className="ml-4 flex-1">
-
-          {/* Meta Info */}
-          <div className="mt-2 flex justify-between w-full text-xs text-gray-600">
-            <div>{formatSeconds(song.duration)}</div>
-            <div>{song.bpm} BPM</div>
-            <div>⭐ {(song.score * 10).toFixed(2)}</div>
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-500 mb-2">
+            <span>{formatSeconds(song.duration)}</span>
+            <span>{song.bpm} BPM</span>
+            <span>{'★'} {(song.score * 10).toFixed(1)}</span>
           </div>
 
-          {/*Difficulties*/}
-          <div className="mt-2 flex flex-wrap gap-1">
+          <div className="flex flex-col gap-1.5">
             {song.difficulties.map((diff, index) => (
               <button key={index} onClick={(e) => play(e, index)}
-                      className="flex items-center gap-2 px-2 py-1 bg-green-500 text-white rounded shadow hover:bg-green-600 focus:outline-none transition"
-              >
-                <FaGamepad/> {`${diff.characteristic == "Standard" ? "" : `${diff.characteristic} `}${diff.name} (${diff.notesPerSecond.toFixed(2)} NPS)`}
+                      className="btn-play flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition">
+                <FaGamepad/>
+                {`${diff.characteristic == "Standard" ? "" : `${diff.characteristic} `}${diff.name} (${diff.notesPerSecond.toFixed(1)} NPS)`}
               </button>
             ))}
           </div>
-
         </div>
-
       </div>
-
-
     </div>
   );
 }
-
 
 function formatSeconds(seconds) {
   const minutes = Math.floor(seconds / 60);

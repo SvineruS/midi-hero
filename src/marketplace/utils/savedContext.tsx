@@ -20,12 +20,20 @@ export const SavedSongsProvider = ({ children }) => {
 
   const saveSong = useCallback(async (song) => {
     await songLoader.saveSong(song);
-    setSavedSongs((prevSongs) => [...prevSongs, song]);
+    setSavedSongs((prevSongs) => {
+      const existing = prevSongs.find(s => s.id === song.id);
+      if (existing) {
+        return prevSongs.map(s => s.id === song.id ? { ...song, _removed: undefined } : s);
+      }
+      return [...prevSongs, song];
+    });
   }, []);
 
   const removeSong = useCallback(async (songId) => {
     await songLoader.deleteSong(songId);
-    setSavedSongs((prevSongs) => prevSongs.filter(song => song.id !== songId));
+    setSavedSongs((prevSongs) => prevSongs.map(song =>
+      song.id === songId ? { ...song, _removed: true } : song
+    ));
   }, []);
 
   return (
