@@ -10,20 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@preact/preset-vite": "^2.10.5",
     "@tonejs/midi": "^2.0.28",
     "bsmap": "^2.1.9",
     "jszip": "^3.10.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "preact": "^10.29.1",
     "react-icons": "^5.4.0",
     "react-intersection-observer": "^9.14.1",
     "three": "^0.167.1"
   },
   "devDependencies": {
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
     "@types/three": "^0.167.1",
-    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "globals": "^15.14.0",
     "postcss": "^8.4.49",

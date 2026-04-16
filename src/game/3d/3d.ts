@@ -22,7 +22,10 @@ scene.fog = new THREE.FogExp2(0xfeaafe, 0.003);
 export const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+
+export function attachRenderer(container: HTMLElement) {
+  container.appendChild(renderer.domElement);
+}
 
 
 export const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 600);

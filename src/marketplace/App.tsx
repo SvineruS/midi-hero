@@ -5,13 +5,13 @@ import { AudioProvider, useAudio } from "./utils/audioContext.tsx";
 import { SavedSongsProvider, useSavedSongs } from "./utils/savedContext.tsx";
 import { InfiniteScroll } from "./utils/infScroll.tsx";
 
-function App() {
+function App({ onPlay }: { onPlay: (songId: string, diffI: number) => void }) {
   return (
     <AudioProvider>
       <SavedSongsProvider>
         <div className="p-8 flex flex-col items-center gap-4">
-          <SavedSongs/>
-          <Search/>
+          <SavedSongs onPlay={onPlay}/>
+          <Search onPlay={onPlay}/>
         </div>
       </SavedSongsProvider>
     </AudioProvider>
@@ -19,7 +19,7 @@ function App() {
 
 }
 
-function Search() {
+function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void }) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const [searchResults, setSearchResults] = useState([]);
@@ -52,7 +52,7 @@ function Search() {
         <SearchBar onSubmit={onSubmit}/>
       </div>
 
-      <SongList songs={searchResults}/>
+      <SongList songs={searchResults} onPlay={onPlay}/>
 
 
       <button onClick={() => loadMore(page + 1)}
@@ -84,26 +84,26 @@ function SearchBar({ onSubmit }) {
 }
 
 
-function SavedSongs() {
+function SavedSongs({ onPlay }: { onPlay: (songId: string, diffI: number) => void }) {
   const { savedSongs } = useSavedSongs(); // Use the saved songs context
 
   return <div className="p-8 flex flex-col items-center gap-4">
     <h1 className="text-2xl font-bold text-gray-800">Saved songs</h1>
-    <SongList songs={savedSongs}/>
+    <SongList songs={savedSongs} onPlay={onPlay}/>
   </div>
 
 }
 
 
-function SongList({ songs }) {
+function SongList({ songs, onPlay }: { songs: any[], onPlay: (songId: string, diffI: number) => void }) {
   return (
     <div className="grid grid-cols-3 gap-4">
-      {songs.map(song => <Song key={song.id} song={song}/>)}
+      {songs.map(song => <Song key={song.id} song={song} onPlay={onPlay}/>)}
     </div>
   );
 }
 
-function Song({ song }) {
+function Song({ song, onPlay }: { song: any, onPlay: (songId: string, diffI: number) => void }) {
   const { currentUrl, playAudio, stopAudio } = useAudio(); // Use the audio context
   const isPlaying = currentUrl == song.previewURL;
 
@@ -123,8 +123,7 @@ function Song({ song }) {
 
   function play(e, diffI) {
     e.stopPropagation();
-    const url = `/midi-hero/#${song.id}-${diffI}`;
-    window.open(url, "_blank");
+    onPlay(song.id, diffI);
   }
 
   async function save(e) {
