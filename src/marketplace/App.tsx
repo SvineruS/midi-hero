@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "preact/hooks";
 import { FaGamepad, FaHeart, FaPlay, FaStop, FaTrashAlt } from "react-icons/fa";
-import { searchSongs, SearchFilters } from "../songs/bsApi.ts";
+import { searchSongs, SearchFilters, findSimilarSongs } from "../songs/bsApi.ts";
 import { AudioProvider, useAudio } from "./utils/audioContext.tsx";
 import { SavedSongsProvider, useSavedSongs } from "./utils/savedContext.tsx";
 import { InfiniteScroll } from "./utils/infScroll.tsx";
@@ -15,6 +15,9 @@ function App({ onPlay, onJoinLobby }: {
 }) {
   const [showMpModal, setShowMpModal] = useState(false);
   const [MpModal, setMpModal] = useState<any>(null);
+  const [similarSongs, setSimilarSongs] = useState<any[] | null>(null);
+  const [similarLoading, setSimilarLoading] = useState(false);
+  const [similarSource, setSimilarSource] = useState("");
 
   async function openMultiplayer() {
     if (!MpModal) {
@@ -22,6 +25,20 @@ function App({ onPlay, onJoinLobby }: {
       setMpModal(() => MultiplayerModal);
     }
     setShowMpModal(true);
+  }
+
+  async function handleSimilar(songId: string, songName: string) {
+    setSimilarLoading(true);
+    setSimilarSource(songName);
+    setSimilarSongs([]);
+    const results = await findSimilarSongs(songId);
+    setSimilarSongs(results);
+    setSimilarLoading(false);
+  }
+
+  function clearSimilar() {
+    setSimilarSongs(null);
+    setSimilarSource("");
   }
 
   return (
@@ -42,8 +59,14 @@ function App({ onPlay, onJoinLobby }: {
             )}
           </div>
 
-          <SavedSongs onPlay={onPlay}/>
-          <Search onPlay={onPlay}/>
+          {similarSongs !== null && (
+            <SimilarSection songs={similarSongs} loading={similarLoading}
+                           sourceName={similarSource} onPlay={onPlay}
+                           onSimilar={handleSimilar} onClose={clearSimilar}/>
+          )}
+
+          <SavedSongs onPlay={onPlay} onSimilar={handleSimilar}/>
+          <Search onPlay={onPlay} onSimilar={handleSimilar}/>
         </div>
 
         {showMpModal && MpModal && (
@@ -60,7 +83,31 @@ function App({ onPlay, onJoinLobby }: {
   )
 }
 
-function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void }) {
+function SimilarSection({ songs, loading, sourceName, onPlay, onSimilar, onClose }: {
+  songs: any[]; loading: boolean; sourceName: string;
+  onPlay: (songId: string, diffI: number) => void;
+  onSimilar: (songId: string, songName: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-4 mb-10 w-full">
+      <div className="flex items-center gap-3">
+        <h2 className="text-xl font-semibold text-gray-300">
+          Similar to <span className="text-cyan-400">{sourceName}</span>
+        </h2>
+        <button onClick={onClose} className="text-xs text-gray-500 hover:text-gray-300 transition">✕ Close</button>
+      </div>
+      {loading
+        ? <div className="text-sm text-gray-500">Finding similar songs...</div>
+        : songs.length === 0
+          ? <div className="text-sm text-gray-500">No similar songs found</div>
+          : <SongList songs={songs} onPlay={onPlay} onSimilar={onSimilar}/>
+      }
+    </div>
+  )
+}
+
+function Search({ onPlay, onSimilar }: { onPlay: (songId: string, diffI: number) => void; onSimilar: (songId: string, songName: string) => void }) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const [searchResults, setSearchResults] = useState([]);
@@ -105,34 +152,34 @@ function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void })
         <SearchBar onSubmit={onSubmit}/>
       </div>
       <SearchFilterPanel filters={filters} onChange={onFiltersChange}/>
-      <SongList songs={searchResults} onPlay={onPlay}/>
+      <SongList songs={searchResults} onPlay={onPlay} onSimilar={onSimilar}/>
       <InfiniteScroll loadMore={loadNextPage}/>
       {loading && <div className="text-sm text-gray-500">Loading...</div>}
     </div>
   )
 }
 
-function SavedSongs({ onPlay }: { onPlay: (songId: string, diffI: number) => void }) {
+function SavedSongs({ onPlay, onSimilar }: { onPlay: (songId: string, diffI: number) => void; onSimilar: (songId: string, songName: string) => void }) {
   const { savedSongs } = useSavedSongs();
   if (!savedSongs.length) return null;
 
   return (
     <div className="flex flex-col items-center gap-4 mb-10 w-full">
       <h2 className="text-xl font-semibold text-gray-300">Saved Songs</h2>
-      <SongList songs={savedSongs} onPlay={onPlay}/>
+      <SongList songs={savedSongs} onPlay={onPlay} onSimilar={onSimilar}/>
     </div>
   )
 }
 
-function SongList({ songs, onPlay }: { songs: any[], onPlay: (songId: string, diffI: number) => void }) {
+function SongList({ songs, onPlay, onSimilar }: { songs: any[], onPlay: (songId: string, diffI: number) => void; onSimilar?: (songId: string, songName: string) => void }) {
   return (
     <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
-      {songs.map(song => <Song key={song.id} song={song} onPlay={onPlay}/>)}
+      {songs.map(song => <Song key={song.id} song={song} onPlay={onPlay} onSimilar={onSimilar}/>)}
     </div>
   );
 }
 
-function Song({ song, onPlay }: { song: any, onPlay: (songId: string, diffI: number) => void }) {
+function Song({ song, onPlay, onSimilar }: { song: any, onPlay: (songId: string, diffI: number) => void; onSimilar?: (songId: string, songName: string) => void }) {
   const { currentUrl, playAudio, stopAudio } = useAudio();
   const isPlaying = currentUrl == song.previewURL;
 
@@ -200,6 +247,13 @@ function Song({ song, onPlay }: { song: any, onPlay: (songId: string, diffI: num
                   style={{ opacity: isTransitioning ? 0.5 : 1 }}>
             {isSavedOrSaving ? <><FaTrashAlt/> Remove</> : <><FaHeart/> Save</>}
           </button>
+
+          {onSimilar && (
+            <button onClick={(e) => { e.stopPropagation(); onSimilar(song.id, song.songName); }}
+                    className="btn-listen w-20 flex items-center justify-center px-2 py-1 text-xs rounded transition">
+              Similar
+            </button>
+          )}
         </div>
 
         <div className="flex-1 min-w-0 overflow-hidden">

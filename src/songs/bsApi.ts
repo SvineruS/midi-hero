@@ -72,6 +72,52 @@ export async function downloadSong(songMeta) {
 }
 
 
+const similarCache = new Map<string, any[]>();
+
+export async function findSimilarSongs(songId: string): Promise<any[]> {
+  if (similarCache.has(songId)) return similarCache.get(songId)!;
+
+  // 1. Find playlists containing this song
+  const plRes = await fetch(`https://api.beatsaver.com/playlists/map/${songId}/0`);
+  const plData = await plRes.json();
+  const playlists = (plData.docs || []).slice(0, 8);
+
+  if (!playlists.length) {
+    similarCache.set(songId, []);
+    return [];
+  }
+
+  // 2. Fetch contents of each playlist (in parallel, first page only)
+  const contentPromises = playlists.map(async (pl: any) => {
+    const res = await fetch(`https://api.beatsaver.com/playlists/id/${pl.playlistId}/0`);
+    const data = await res.json();
+    return (data.maps || []).map((m: any) => m.map);
+  });
+  const allMaps = (await Promise.all(contentPromises)).flat();
+
+  // 3. Count frequency (how many playlists each song appeared in), exclude the source song
+  const freq = new Map<string, { count: number; song: any }>();
+  for (const map of allMaps) {
+    if (!map || map.id === songId) continue;
+    const existing = freq.get(map.id);
+    if (existing) {
+      existing.count++;
+    } else {
+      freq.set(map.id, { count: 1, song: map });
+    }
+  }
+
+  // 4. Sort by frequency descending, take top 30
+  const sorted = [...freq.values()]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 30)
+    .map(e => parseAnswerSong(e.song));
+
+  similarCache.set(songId, sorted);
+  return sorted;
+}
+
+
 function parseAnswerSong(song) {
   const lastVersion = song.versions[song.versions.length - 1];
   return {
