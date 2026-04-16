@@ -19,114 +19,86 @@ uniform vec3 colorCenter1;
 uniform vec3 colorCenter2;
 uniform vec3 colorCenter3;
 
-float colormap_red(float x) {
-    if (x < 0.0) {
-        return 54.0 / 255.0;
-    } else if (x < 20049.0 / 82979.0) {
-        return (829.79 * x + 54.51) / 255.0;
-    } else {
-        return 1.0;
-    }
-}
-
-float colormap_green(float x) {
-    if (x < 20049.0 / 82979.0) {
-        return 0.0;
-    } else if (x < 327013.0 / 810990.0) {
-        return (8546482679670.0 / 10875673217.0 * x - 2064961390770.0 / 10875673217.0) / 255.0;
-    } else if (x <= 1.0) {
-        return (103806720.0 / 483977.0 * x + 19607415.0 / 483977.0) / 255.0;
-    } else {
-        return 1.0;
-    }
-}
-
-float colormap_blue(float x) {
-    if (x < 0.0) {
-        return 54.0 / 255.0;
-    } else if (x < 7249.0 / 82979.0) {
-        return (829.79 * x + 54.51) / 255.0;
-    } else if (x < 20049.0 / 82979.0) {
-        return 127.0 / 255.0;
-    } else if (x < 327013.0 / 810990.0) {
-        return (792.02249341361393720147485376583 * x - 64.364790735602331034989206222672) / 255.0;
-    } else {
-        return 1.0;
-    }
-}
-
-vec3 colormap(float x) {
-    return vec3(colormap_red(x), colormap_green(x), colormap_blue(x));
-}
-
-// https://iquilezles.org/articles/warp
-/*float noise( in vec2 x )
-{
-    vec2 p = floor(x);
-    vec2 f = fract(x);
-    f = f*f*(3.0-2.0*f);
-    float a = textureLod(iChannel0,(p+vec2(0.5,0.5))/256.0,0.0).x;
-		float b = textureLod(iChannel0,(p+vec2(1.5,0.5))/256.0,0.0).x;
-		float c = textureLod(iChannel0,(p+vec2(0.5,1.5))/256.0,0.0).x;
-		float d = textureLod(iChannel0,(p+vec2(1.5,1.5))/256.0,0.0).x;
-    return mix(mix( a, b,f.x), mix( c, d,f.x),f.y);
-}*/
-
-
-float rand(vec2 n) { 
+float rand(vec2 n) {
     return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
 }
 
-float noise(vec2 p){
+float noise(vec2 p) {
     vec2 ip = floor(p);
     vec2 u = fract(p);
-    u = u*u*(3.0-2.0*u);
-
+    u = u * u * (3.0 - 2.0 * u);
     float res = mix(
-        mix(rand(ip),rand(ip+vec2(1.0,0.0)),u.x),
-        mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x),u.y);
-    return res*res;
+        mix(rand(ip), rand(ip + vec2(1.0, 0.0)), u.x),
+        mix(rand(ip + vec2(0.0, 1.0)), rand(ip + vec2(1.0, 1.0)), u.x), u.y);
+    return res * res;
 }
 
-const mat2 mtx = mat2( 0.80,  0.60, -0.60,  0.80 );
+const mat2 mtx = mat2(0.80, 0.60, -0.60, 0.80);
 
-float fbm( vec2 p )
-{
+float fbm(vec2 p) {
     float f = 0.0;
-
-    f += 0.500000*noise( p + iTime / 10.  ); p = mtx*p*2.02;
-    f += 0.031250*noise( p ); p = mtx*p*2.01;
-    f += 0.250000*noise( p ); p = mtx*p*2.03;
-    f += 0.125000*noise( p ); p = mtx*p*2.01;
-    f += 0.062500*noise( p ); p = mtx*p*2.04;
-    f += 0.015625*noise( p + sin(iTime / 10.) );
-
-    return f/0.96875;
+    f += 0.500000 * noise(p + iTime * 0.1);  p = mtx * p * 2.02;
+    f += 0.031250 * noise(p);                 p = mtx * p * 2.01;
+    f += 0.250000 * noise(p);                 p = mtx * p * 2.03;
+    f += 0.125000 * noise(p);                 p = mtx * p * 2.01;
+    f += 0.062500 * noise(p);                 p = mtx * p * 2.04;
+    f += 0.015625 * noise(p + sin(iTime * 0.1));
+    return f / 0.96875;
 }
 
-float pattern( in vec2 p )
-{
-		return fbm( p + fbm( p + fbm( p ) ) );
+float pattern(in vec2 p) {
+    return fbm(p + fbm(p + fbm(p)));
 }
 
-float gradient(in vec2 coord) {
-  return max(-0.2, 1.-length(coord)) * iVisibility;
-}
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = fragCoord / iResolution.x;
+    vec2 uvN = fragCoord / iResolution.xy;
 
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
-    vec2 uv = fragCoord/iResolution.x;
-    float shade = pattern(uv);
-    
-    vec3 color = colormap(shade) * 0.5;
-    
-    color += gradient(uv - vec2(0.2, 0.5)) * colorLeft; 
-    color += gradient(uv - vec2(0.8, 0.5)) * colorRight; 
-    color += gradient(uv - vec2(0.5, 0.1)) * colorCenter1; 
-    color += gradient(uv - vec2(0.5, 0.5)) * colorCenter2; 
-    color += gradient(uv - vec2(0.5, 0.9)) * colorCenter3; 
-   
-   fragColor = vec4(color.rgb, 1.);
+    // Two noise layers at different scales for organic flow
+    float n1 = pattern(uv);
+    float n2 = fbm(uv * 1.5 + iTime * 0.03);
+
+    // Dark neon base: deep purple/indigo with noise-driven variation
+    vec3 base = mix(
+        vec3(0.02, 0.005, 0.06),
+        vec3(0.08, 0.02, 0.14),
+        n1 * 0.65
+    );
+
+    // Spatial regions — smooth gaussian-like falloff per light
+    float rL  = smoothstep(1.3, 0.0, length(uv - vec2(0.15, 0.5)));
+    float rR  = smoothstep(1.3, 0.0, length(uv - vec2(0.85, 0.5)));
+    float rC1 = smoothstep(1.1, 0.0, length(uv - vec2(0.5, 0.12)));
+    float rC2 = smoothstep(1.1, 0.0, length(uv - vec2(0.5, 0.5)));
+    float rC3 = smoothstep(1.1, 0.0, length(uv - vec2(0.5, 0.88)));
+
+    // Colors flow through the noise texture instead of flat circles
+    float flow = n1 * 0.6 + n2 * 0.4;
+    rL  *= flow;
+    rR  *= flow;
+    rC1 *= flow;
+    rC2 *= flow * (0.4 + 0.6 * n2);
+    rC3 *= flow;
+
+    // Weighted light contribution
+    vec3 lights =
+        colorLeft    * rL +
+        colorRight   * rR +
+        colorCenter1 * rC1 +
+        colorCenter2 * rC2 +
+        colorCenter3 * rC3;
+
+    lights *= iVisibility;
+
+    // Screen blend: saturates gracefully, never clips to white
+    vec3 color = 1.0 - (1.0 - base) * (1.0 - lights);
+
+    // Vignette: darken edges for depth
+    vec2 vc = uvN - 0.5;
+    float vig = 1.0 - dot(vc, vc) * 1.6;
+    color *= clamp(vig, 0.0, 1.0);
+
+    fragColor = vec4(color, 1.0);
 }
 
 void main() {
