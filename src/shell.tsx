@@ -64,9 +64,11 @@ async function startGame(songId: string, diffI: number, session: MultiplayerRoom
 
   const { initGame } = await import("./game/main.ts");
 
+  const { stopGame } = await import("./game/main.ts");
+
   const onBack = session
-    ? () => { isInGame = false; showLobby(session); }
-    : () => { isInGame = false; showMarketplace(); };
+    ? () => { stopGame(); isInGame = false; showLobby(session); }
+    : () => { stopGame(); isInGame = false; showMarketplace(); };
 
   await initGame(gameContainer, songId, diffI, onBack, session);
 }
