@@ -9,6 +9,10 @@ const timeOffsetElem = document.getElementById("timeOffset") as HTMLInputElement
 const visibilityElem = document.getElementById("visibility") as HTMLInputElement;
 const volumeElem = document.getElementById("volume") as HTMLInputElement;
 
+const HIT_TIME_SUM = 0.03 + 0.1; // min + max of slider range
+function hitTimeToSlider(hitTime: number) { return String(HIT_TIME_SUM - hitTime); }
+function sliderToHitTime(sliderVal: number) { return HIT_TIME_SUM - sliderVal; }
+
 const startOverlayElem = document.getElementById("startOverlay") as HTMLDivElement;
 const startCoverElem = document.getElementById("startCover") as HTMLImageElement;
 const startTitleElem = document.getElementById("startTitle") as HTMLElement;
@@ -28,6 +32,13 @@ const endReplayBtn = document.getElementById("endReplay") as HTMLButtonElement;
 const endBackBtn = document.getElementById("endBack") as HTMLButtonElement;
 
 
+const settingsToggleElem = document.getElementById("settingsToggle") as HTMLButtonElement;
+const controlsPanelElem = document.getElementById("controlsPanel") as HTMLDivElement;
+
+settingsToggleElem.addEventListener("click", () => {
+  controlsPanelElem.classList.toggle("hidden");
+});
+
 let game: Game;
 let gameStarted = false;
 
@@ -41,7 +52,7 @@ async function load() {
 
   console.log("loaded timeOffset", timeOffset, "hitTime", hitTime, "visibility", visibility)
 
-  hitTimeElem.value = hitTime;
+  hitTimeElem.value = hitTimeToSlider(hitTime);
   timeOffsetElem.value = timeOffset;
   visibilityElem.value = visibility;
   volumeElem.value = audioVolume;
@@ -91,8 +102,9 @@ async function load() {
     StorageUtil.set("timeOffset", +e.target.value)
   });
   hitTimeElem.addEventListener('input', (e: any) => {
-    game.setHitWindow(+e.target.value)
-    StorageUtil.set("hitTime", +e.target.value)
+    const hitTime = sliderToHitTime(+e.target.value);
+    game.setHitWindow(hitTime);
+    StorageUtil.set("hitTime", hitTime);
   });
   visibilityElem.addEventListener('input', (e: any) => {
     game.visuals.backgroundVisuals.updateVisibility(+e.target.value)
@@ -135,6 +147,8 @@ function populateStartOverlay() {
   startBpmElem.textContent = `${meta.bpm} BPM`;
   startDurationElem.textContent = formatSeconds(meta.duration);
   startNpsElem.textContent = `${difficulty.notesPerSecond.toFixed(2)} NPS`;
+
+  startOverlayElem.querySelector('.panel')!.classList.remove('loading');
 }
 
 function startGame() {

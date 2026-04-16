@@ -53,7 +53,38 @@ body {
     border-color: rgba(255, 255, 255, 0.18);
 }
 
+.settings {
+    position: relative;
+}
+
+.settings-toggle {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+    color: #e6f1ff;
+    background: rgba(16, 18, 28, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    cursor: pointer;
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    transition: all 0.15s ease;
+}
+
+.settings-toggle:hover {
+    color: #ffffff;
+    background: rgba(28, 32, 48, 0.75);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
 .controls {
+    position: absolute;
+    top: 0;
+    right: calc(100% + 8px);
     display: flex;
     align-items: center;
     gap: 18px;
@@ -63,6 +94,15 @@ body {
     border-radius: 8px;
     backdrop-filter: blur(10px) saturate(140%);
     -webkit-backdrop-filter: blur(10px) saturate(140%);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+    white-space: nowrap;
+}
+
+.controls.hidden {
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    visibility: hidden;
 }
 
 .controls label {
@@ -179,7 +219,7 @@ body {
     font-size: 16px;
     font-weight: 400;
     color: #b8c9dd;
-    margin: -10px 0 0 0;
+    margin: 2px 0 0 0;
 }
 
 .meta {
@@ -215,6 +255,77 @@ kbd {
     border: 1px solid rgba(241, 100, 236, 0.7);
     border-radius: 4px;
     box-shadow: 0 0 8px rgba(241, 100, 236, 0.4);
+}
+
+/* Loading skeletons */
+
+.panel.loading #startCover,
+.panel.loading .info {
+    display: none;
+}
+
+.panel:not(.loading) .skel-group {
+    display: none;
+}
+
+.skel-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+.skel {
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0.03) 25%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.03) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skel-cover {
+    width: 220px;
+    height: 220px;
+    border-radius: 12px;
+}
+
+.skel-title {
+    width: 240px;
+    height: 28px;
+    border-radius: 6px;
+}
+
+.skel-author {
+    width: 160px;
+    height: 16px;
+    border-radius: 4px;
+    margin-top: 8px;
+}
+
+.skel-chips {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 14px;
+}
+
+.skel-chip {
+    width: 72px;
+    height: 26px;
+    border-radius: 999px;
+}
+
+.skel-hint {
+    width: 200px;
+    height: 14px;
+    border-radius: 4px;
+    margin-top: 14px;
+}
+
+@keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 /* End overlay */
