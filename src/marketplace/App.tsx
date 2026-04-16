@@ -1,10 +1,11 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useState, useRef } from "preact/hooks";
 import { FaGamepad, FaHeart, FaPlay, FaStop, FaTrashAlt } from "react-icons/fa";
-import { searchSongs } from "../songs/bsApi.ts";
+import { searchSongs, SearchFilters } from "../songs/bsApi.ts";
 import { AudioProvider, useAudio } from "./utils/audioContext.tsx";
 import { SavedSongsProvider, useSavedSongs } from "./utils/savedContext.tsx";
 import { InfiniteScroll } from "./utils/infScroll.tsx";
 import { SearchBar } from "../shared/SearchBar.tsx";
+import { SearchFilterPanel } from "../shared/SearchFilters.tsx";
 import { formatSeconds } from "../shared/formatSeconds.ts";
 import type { MultiplayerRoom } from "../multiplayer/room.ts";
 
@@ -64,32 +65,46 @@ function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void })
   const [page, setPage] = useState(0);
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState<SearchFilters>({});
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
 
-  async function onSubmit(q: string) {
-    const results = await searchSongs(q);
+  async function doSearch(q: string, p: number, f: SearchFilters, append = false) {
+    if (!append) setLoading(true);
+    const results = await searchSongs(q, p, f);
+    setSearchResults(prev => append ? [...prev, ...results] : results);
+    setLoading(false);
+  }
+
+  function onSubmit(q: string) {
     setQuery(q);
     setPage(0);
-    setSearchResults(results);
+    doSearch(q, 0, filtersRef.current);
+  }
+
+  function onFiltersChange(f: SearchFilters) {
+    setFilters(f);
+    setPage(0);
+    doSearch(query, 0, f);
   }
 
   async function loadNextPage() {
     if (loading) return;
     setLoading(true);
     const nextPage = page + 1;
-    const results = await searchSongs(query, nextPage);
     setPage(nextPage);
-    setSearchResults(prev => [...prev, ...results]);
-    setLoading(false);
+    doSearch(query, nextPage, filtersRef.current, true);
   }
 
-  useEffect(() => { onSubmit(""); }, []);
+  useEffect(() => { doSearch("", 0, {}); }, []);
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-4">
       <h2 className="text-xl font-semibold text-gray-300">Search for a Song</h2>
       <div className="w-full max-w-xl">
         <SearchBar onSubmit={onSubmit}/>
       </div>
+      <SearchFilterPanel filters={filters} onChange={onFiltersChange}/>
       <SongList songs={searchResults} onPlay={onPlay}/>
       <InfiniteScroll loadMore={loadNextPage}/>
       {loading && <div className="text-sm text-gray-500">Loading...</div>}

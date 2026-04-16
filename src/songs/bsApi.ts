@@ -1,12 +1,23 @@
 import JSZip from "jszip";
 import { parseDifficultyFile } from "./songParser.ts";
 
-export async function searchSongs(query, page=0) {
-  console.log("Searching for songs", query, "page", page);
-  const response = await fetch(`https://api.beatsaver.com/search/v1/${page}?lleaderboard=All&q=${query}&sortOrder=Rating`);
+export interface SearchFilters {
+  minNps?: number;
+  maxNps?: number;
+  tags?: string[];
+  order?: "Latest" | "Relevance" | "Rating" | "Curated" | "Random";
+}
+
+export async function searchSongs(query: string, page = 0, filters: SearchFilters = {}) {
+  const params = new URLSearchParams({ q: query });
+  if (filters.minNps) params.set("minNps", String(filters.minNps));
+  if (filters.maxNps) params.set("maxNps", String(filters.maxNps));
+  if (filters.tags?.length) params.set("tags", filters.tags.join("|"));
+  params.set("sortOrder", filters.order || "Rating");
+
+  const response = await fetch(`https://api.beatsaver.com/search/v1/${page}?${params}`);
   const data = await response.json();
   return data.docs.map(parseAnswerSong);
-
 }
 
 export async function searchSongById(songId) {
