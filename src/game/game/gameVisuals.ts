@@ -204,7 +204,7 @@ class FinishVisuals {
   }
 
   onHitOrMiss(isHit: boolean, line: number) {
-    finishLights[line].intensity = 150;
+    finishLights[line].intensity = 50;
     finishLights[line].color = isHit ? this.COLOR_GREEN : this.COLOR_RED;
     // keyHintTexts[line].material = isHit ? new THREE.MeshBasicMaterial({ color: 0x00ff00 }) : new THREE.MeshBasicMaterial({ color: 0xff0000 });
     if (!isHit) this.flashFail();

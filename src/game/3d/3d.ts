@@ -33,7 +33,7 @@ camera.rotation.x = Math.PI * -0.1;
 
 const funLight = (color, z) => {
   const light = new THREE.PointLight(color, 100, 500);
-  light.position.set(0, 10, -10 * z)
+  light.position.set(0, 10*z, -10 * z)
   scene.add(light);
   return light;
 }
