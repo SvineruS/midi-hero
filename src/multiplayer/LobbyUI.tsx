@@ -8,7 +8,7 @@ import { SongCard } from "../shared/SongCard.tsx";
 import { SongGrid } from "../shared/SongGrid.tsx";
 
 
-// --- Modal for create/join (overlays marketplace) ---
+// --- Modal for create/join ---
 
 export function MultiplayerModal({ onClose, onJoinLobby }: {
   onClose: () => void;
@@ -25,32 +25,30 @@ export function MultiplayerModal({ onClose, onJoinLobby }: {
   function createRoom() {
     const playerName = saveName(name);
     const code = generateRoomCode();
-    const room = new MultiplayerRoom(code, playerName, true);
-    onJoinLobby(room);
+    onJoinLobby(new MultiplayerRoom(code, playerName, true));
   }
 
   function joinRoom() {
     const code = codeInput.trim().toUpperCase();
     if (code.length !== 4) return;
     const playerName = saveName(name);
-    const room = new MultiplayerRoom(code, playerName, false);
-    onJoinLobby(room);
+    onJoinLobby(new MultiplayerRoom(code, playerName, false));
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center"
          style={{ background: "rgba(5,2,12,0.75)", backdropFilter: "blur(8px)" }}
          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full max-w-sm mx-4 p-6 rounded-xl flex flex-col gap-4"
-           style={{ background: "rgba(16,12,30,0.95)", border: "1px solid rgba(80,226,227,0.25)",
-                    boxShadow: "0 0 60px rgba(80,226,227,0.15), 0 0 120px rgba(241,100,236,0.1)" }}>
+      <div className="mp-modal w-full max-w-sm mx-4 p-6 rounded-xl flex flex-col gap-5">
 
-        <h2 className="text-2xl font-bold text-center text-white">Multiplayer</h2>
+        <h2 className="text-2xl font-bold text-center"
+            style={{ color: "#fff", textShadow: "0 0 20px rgba(80,226,227,0.4)" }}>
+          Multiplayer
+        </h2>
 
         <input type="text" placeholder="Your name" value={name}
                onInput={(e: any) => setName(e.target.value)}
-               className="px-4 py-2.5 rounded-lg text-sm text-gray-200 placeholder-gray-500 outline-none focus:ring-1 focus:ring-cyan-500/50"
-               style={{ background: "rgba(20,15,35,0.8)", border: "1px solid rgba(255,255,255,0.08)" }}/>
+               className="mp-input px-4 py-2.5 rounded-lg text-sm placeholder-gray-500"/>
 
         <button onClick={createRoom}
                 className="btn-search px-4 py-3 rounded-lg text-sm font-semibold w-full">
@@ -58,17 +56,16 @@ export function MultiplayerModal({ onClose, onJoinLobby }: {
         </button>
 
         <div className="flex items-center gap-3 text-xs text-gray-500">
-          <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }}/>
-          <span>or join</span>
-          <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }}/>
+          <div className="flex-1 h-px mp-divider"/>
+          <span>or join existing</span>
+          <div className="flex-1 h-px mp-divider"/>
         </div>
 
         <div className="flex gap-2">
           <input type="text" placeholder="CODE" value={codeInput}
                  onInput={(e: any) => setCodeInput(e.target.value.toUpperCase())}
                  maxLength={4}
-                 className="flex-1 px-4 py-2.5 rounded-lg text-sm text-gray-200 placeholder-gray-500 outline-none text-center tracking-[0.3em] uppercase font-mono focus:ring-1 focus:ring-green-500/50"
-                 style={{ background: "rgba(20,15,35,0.8)", border: "1px solid rgba(255,255,255,0.08)" }}/>
+                 className="mp-input flex-1 px-4 py-2.5 rounded-lg text-sm text-center tracking-[0.3em] uppercase font-mono placeholder-gray-500"/>
           <button onClick={joinRoom}
                   className="btn-play px-6 py-2.5 rounded-lg text-sm font-semibold">
             Join
@@ -76,7 +73,7 @@ export function MultiplayerModal({ onClose, onJoinLobby }: {
         </div>
 
         <button onClick={onClose}
-                className="text-sm text-gray-500 hover:text-gray-300 transition mt-1 text-center">
+                className="text-sm text-gray-500 hover:text-gray-300 transition text-center">
           Cancel
         </button>
       </div>
@@ -85,7 +82,7 @@ export function MultiplayerModal({ onClose, onJoinLobby }: {
 }
 
 
-// --- Full-page lobby (after room joined) ---
+// --- Full-page lobby ---
 
 interface LobbyProps {
   session: MultiplayerRoom;
@@ -96,12 +93,20 @@ interface LobbyProps {
 export default function LobbyUI({ session, onStartGame, onCancel }: LobbyProps) {
   const [peers, setPeers] = useState<string[]>([]);
   const [status, setStatus] = useState("Waiting for players...");
+  const [statusType, setStatusType] = useState<"" | "downloading" | "ready">("");
   const [downloading, setDownloading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const selectedSongRef = useRef<{ songId: string; diffI: number } | null>(null);
 
   function launchGame() {
     const sel = selectedSongRef.current;
     if (sel) onStartGame(sel.songId, sel.diffI, session);
+  }
+
+  function copyCode() {
+    navigator.clipboard.writeText(session.roomCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   }
 
   useEffect(() => {
@@ -112,13 +117,16 @@ export default function LobbyUI({ session, onStartGame, onCancel }: LobbyProps) 
     session.onSongSelected = async (sel: SongSelection) => {
       selectedSongRef.current = sel;
       setStatus("Downloading song...");
+      setStatusType("downloading");
       setDownloading(true);
       try {
         await loadOrDownloadSong(sel.songId);
         session.markReady();
         setStatus("Ready! Waiting for others...");
+        setStatusType("ready");
       } catch (e) {
         setStatus("Download failed!");
+        setStatusType("");
         console.error(e);
       }
       setDownloading(false);
@@ -142,17 +150,14 @@ export default function LobbyUI({ session, onStartGame, onCancel }: LobbyProps) 
     session.sendSongSelect({ songId, diffI });
 
     setStatus("Downloading song...");
+    setStatusType("downloading");
     setDownloading(true);
     loadOrDownloadSong(songId).then(() => {
       session.markReady();
       setStatus("Ready! Waiting for others...");
+      setStatusType("ready");
       setDownloading(false);
     });
-  }
-
-  function handleCancel() {
-    session.leave();
-    onCancel();
   }
 
   return (
@@ -160,53 +165,58 @@ export default function LobbyUI({ session, onStartGame, onCancel }: LobbyProps) 
       <SavedSongsProvider>
         <div className="min-h-screen px-4 py-8 sm:px-8">
 
-          {/* Lobby header */}
-          <div className="max-w-3xl mx-auto mb-8 p-5 rounded-xl"
-               style={{ background: "rgba(16,12,30,0.7)", border: "1px solid rgba(80,226,227,0.2)" }}>
+          {/* Title */}
+          <h1 className="text-center text-3xl sm:text-4xl font-extrabold mb-6 tracking-tight"
+              style={{ color: "#fff", textShadow: "0 0 30px rgba(80,226,227,0.5), 0 0 60px rgba(241,100,236,0.3)" }}>
+            MIDI HERO
+          </h1>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Lobby card */}
+          <div className="lobby-card max-w-6xl mx-auto mb-8 rounded-xl overflow-hidden">
+
+            {/* Room code bar */}
+            <div className="flex items-center justify-between px-5 py-3"
+                 style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-400">Room</span>
-                <span className="text-2xl font-mono font-bold tracking-[0.3em] px-3 py-0.5 rounded-md"
-                      style={{ color: "#50e2e3", background: "rgba(80,226,227,0.08)", border: "1px solid rgba(80,226,227,0.3)" }}>
+                <span className="text-xs uppercase tracking-wider text-gray-500">Room</span>
+                <button onClick={copyCode}
+                        className="room-code text-xl font-mono font-bold tracking-[0.3em] px-3 py-1 rounded-md">
                   {session.roomCode}
-                </span>
+                </button>
+                {copied && <span className="text-xs text-green-400">Copied!</span>}
               </div>
+              <button onClick={() => { session.leave(); onCancel(); }}
+                      className="btn-leave px-3 py-1.5 rounded-md text-xs font-medium">
+                Leave Room
+              </button>
+            </div>
 
-              <div className="flex flex-wrap gap-2 justify-center">
-                <span className="px-3 py-1 rounded-full text-xs font-medium"
-                      style={{ background: "rgba(80,226,227,0.15)", color: "#50e2e3", border: "1px solid rgba(80,226,227,0.3)" }}>
+            {/* Players + status */}
+            <div className="px-5 py-4">
+              <div className="flex flex-wrap gap-2 mb-3">
+                <span className="player-pill px-3 py-1.5 rounded-full text-xs font-medium">
                   {session.localName} (you)
                 </span>
                 {peers.map(peerId => (
-                  <span key={peerId} className="px-3 py-1 rounded-full text-xs font-medium"
-                        style={{
-                          background: session.isPeerReady(peerId) ? "rgba(34,197,94,0.15)" : "rgba(241,100,236,0.1)",
-                          color: session.isPeerReady(peerId) ? "#4ade80" : "#f164ec",
-                          border: `1px solid ${session.isPeerReady(peerId) ? "rgba(34,197,94,0.3)" : "rgba(241,100,236,0.3)"}`,
-                        }}>
+                  <span key={peerId}
+                        className={`player-pill ${session.isPeerReady(peerId) ? "ready" : "peer"} px-3 py-1.5 rounded-full text-xs font-medium`}>
                     {session.getPeerName(peerId)}
                     {session.isPeerReady(peerId) && " ✓"}
                   </span>
                 ))}
               </div>
 
-              <button onClick={handleCancel}
-                      className="text-xs text-gray-500 hover:text-gray-300 transition">
-                Leave
-              </button>
+              <div className={`lobby-status ${statusType} text-sm`}>
+                {peers.length === 0 ? "Share the room code to invite players" : status}
+              </div>
             </div>
-
-            {status && (
-              <div className="text-center text-sm text-gray-400 mt-3">{status}</div>
-            )}
           </div>
 
           {/* Song browser */}
           {!downloading && (
             <div className="flex flex-col gap-8">
               <SavedSongsSection onPlay={handleSongSelect}/>
-              <SongGrid title="Search Songs" onPlay={handleSongSelect}/>
+              <SongGrid title="Pick a song for everyone" onPlay={handleSongSelect}/>
             </div>
           )}
         </div>

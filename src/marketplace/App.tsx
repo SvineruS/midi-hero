@@ -28,19 +28,18 @@ function App({ onPlay, onJoinLobby }: {
       <SavedSongsProvider>
         <div className="min-h-screen px-4 py-8 sm:px-8">
 
-          <h1 className="text-center text-4xl sm:text-5xl font-extrabold mb-4 tracking-tight"
-              style={{ color: "#fff", textShadow: "0 0 30px rgba(80,226,227,0.5), 0 0 60px rgba(241,100,236,0.3)" }}>
-            MIDI HERO
-          </h1>
-
-          {onJoinLobby && (
-            <div className="flex justify-center mb-8">
+          <div className="text-center mb-10">
+            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight"
+                style={{ color: "#fff", textShadow: "0 0 30px rgba(80,226,227,0.5), 0 0 60px rgba(241,100,236,0.3)" }}>
+              MIDI HERO
+            </h1>
+            {onJoinLobby && (
               <button onClick={openMultiplayer}
-                      className="btn-listen px-5 py-2 rounded-lg text-sm font-semibold transition">
-                Multiplayer
+                      className="mt-3 text-sm text-gray-400 hover:text-cyan-400 transition">
+                Play with friends &rarr;
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           <SavedSongs onPlay={onPlay}/>
           <Search onPlay={onPlay}/>
