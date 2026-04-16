@@ -7,18 +7,34 @@ const marketplaceContainer = document.getElementById("marketplace-container")!;
 const gameContainer = document.getElementById("game-container")!;
 const rootEl = document.getElementById("root")!;
 
+let currentSession: MultiplayerRoom | null = null;
+let isInGame = false;
+let navigatingFromPopstate = false;
+
 function showMarketplace() {
+  if (isInGame) {
+    import("./game/main.ts").then(({ stopGame }) => stopGame()).catch(() => {});
+    isInGame = false;
+  }
+
+  currentSession = null;
   gameContainer.style.display = "none";
   marketplaceContainer.style.display = "";
-  location.hash = "";
+  history.replaceState(null, "", window.location.pathname);
+  document.title = "MIDI HERO";
 
   render(<App onPlay={startGame} onJoinLobby={showLobby} />, rootEl);
 }
 
 async function showLobby(session: MultiplayerRoom) {
+  if (isInGame) {
+    import("./game/main.ts").then(({ stopGame }) => stopGame()).catch(() => {});
+    isInGame = false;
+  }
+
+  currentSession = session;
   gameContainer.style.display = "none";
   marketplaceContainer.style.display = "";
-  location.hash = "";
 
   const { default: LobbyUI } = await import("./multiplayer/LobbyUI.tsx");
 
@@ -28,6 +44,7 @@ async function showLobby(session: MultiplayerRoom) {
       onStartGame={(songId, diffI, sess) => startGame(songId, diffI, sess)}
       onCancel={() => {
         session.leave();
+        currentSession = null;
         showMarketplace();
       }}
     />,
@@ -36,27 +53,47 @@ async function showLobby(session: MultiplayerRoom) {
 }
 
 async function startGame(songId: string, diffI: number, session: MultiplayerRoom | null = null) {
+  currentSession = session;
+  isInGame = true;
   marketplaceContainer.style.display = "none";
   gameContainer.style.display = "";
-  location.hash = `#${songId}-${diffI}`;
+
+  if (!navigatingFromPopstate) {
+    history.pushState({ game: `${songId}-${diffI}` }, "", `#${songId}-${diffI}`);
+  }
 
   const { initGame, stopGame } = await import("./game/main.ts");
 
   const onBack = session
-    ? () => { stopGame(); showLobby(session); }
-    : () => { stopGame(); showMarketplace(); };
+    ? () => { stopGame(); isInGame = false; showLobby(session); }
+    : () => { stopGame(); isInGame = false; showMarketplace(); };
 
   const onReplay = session
-    ? () => { stopGame(); startGame(songId, diffI, session); }
+    ? () => { stopGame(); isInGame = false; startGame(songId, diffI, session); }
     : null;
 
   await initGame(gameContainer, songId, diffI, onBack, session, onReplay);
 }
 
-// Boot: check for deep link hash (#songId-diffI)
-const hash = location.hash.substring(1);
-if (hash && hash.includes("-")) {
-  const [songId, diffI] = hash.split("-");
+// Handle Back/Forward
+window.addEventListener("popstate", () => {
+  navigatingFromPopstate = true;
+  const hash = location.hash.substring(1);
+  if (hash && hash.includes("-") && !isInGame) {
+    const [songId, diffI] = hash.split("-");
+    startGame(songId, parseInt(diffI), currentSession);
+  } else if (!hash || !hash.includes("-")) {
+    showMarketplace();
+  }
+  navigatingFromPopstate = false;
+});
+
+// Boot
+const bootHash = location.hash.substring(1);
+if (bootHash && bootHash.includes("-")) {
+  const [songId, diffI] = bootHash.split("-");
+  // Replace the initial entry so Back from game goes to marketplace, not to same game
+  history.replaceState(null, "", window.location.pathname);
   startGame(songId, parseInt(diffI));
 } else {
   showMarketplace();

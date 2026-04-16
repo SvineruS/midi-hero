@@ -201,6 +201,9 @@ export async function initGame(
   game.setHitWindow(hitTime);
   game.visuals.backgroundVisuals.updateVisibility(visibility);
 
+  // Update page title
+  document.title = `${meta.songAuthor} — ${meta.songName} | MIDI HERO`;
+
   // Populate start overlay
   startCoverElem.src = meta.coverURL;
   startTitleElem.textContent = meta.songName;
