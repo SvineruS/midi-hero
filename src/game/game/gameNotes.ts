@@ -104,7 +104,7 @@ export class GameNotes {
     if (note.status !== undefined) return;
     note.status = false;
     this.onFail(note.note, false);
-    console.warn("Missed note")
+    // console.warn("Missed note")
   }
 
 
