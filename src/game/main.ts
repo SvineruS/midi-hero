@@ -1,22 +1,19 @@
 import "./style.css";
 import { loadOrDownloadSong } from "../songs/songLoader.ts";
 import { StorageUtil } from "../settings/settings.ts";
+import { formatSeconds } from "../shared/formatSeconds.ts";
+import type { MultiplayerRoom } from "../multiplayer/room.ts";
+import type { EndStats } from "../multiplayer/types.ts";
 
 const HIT_TIME_SUM = 0.03 + 0.1;
 function hitTimeToSlider(hitTime: number) { return String(HIT_TIME_SUM - hitTime); }
 function sliderToHitTime(sliderVal: number) { return HIT_TIME_SUM - sliderVal; }
 
-function formatSeconds(seconds: number) {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-}
-
 function cloneNotes(notes: any[]) {
   return notes.map(n => ({ ...n, status: undefined }));
 }
 
-function getGrade(accuracy: number) {
+export function getGrade(accuracy: number) {
   if (accuracy >= 1) return { letter: "S+", color: "#50e2e3" };
   if (accuracy >= 0.99) return { letter: "S", color: "#50e2e3" };
   if (accuracy >= 0.95) return { letter: "A", color: "#4ade80" };
@@ -68,26 +65,28 @@ const GAME_HTML = `
                 <span id="startDuration"></span>
                 <span id="startNps"></span>
             </div>
-            <p class="hint">Press <kbd>Space</kbd> or click anywhere to start</p>
+            <p id="startHint" class="hint">Press <kbd>Space</kbd> or click anywhere to start</p>
         </div>
     </div>
 </div>
 <div id="endOverlay" class="overlay hidden">
-    <div class="panel">
+    <div class="panel" id="endPanel">
         <div id="endGrade" class="grade"></div>
-        <div class="stats">
+        <div id="endSoloStats" class="stats">
             <div><span>Score</span><strong id="endScore"></strong></div>
             <div><span>Accuracy</span><strong id="endAccuracy"></strong></div>
             <div><span>Max combo</span><strong id="endMaxCombo"></strong></div>
             <div><span>Hits</span><strong id="endHits"></strong></div>
             <div><span>Fails</span><strong id="endFails"></strong></div>
         </div>
+        <div id="endLeaderboard" class="leaderboard hidden"></div>
         <div class="actions">
             <button id="endReplay">Play again</button>
             <button id="endBack">Marketplace</button>
         </div>
     </div>
 </div>
+<div id="scoreTicker" class="score-ticker hidden"></div>
 `;
 
 
@@ -119,6 +118,8 @@ export async function initGame(
   songId: string,
   diffI: number,
   onBack: () => void,
+  session: MultiplayerRoom | null = null,
+  onReplay: (() => void) | null = null,
 ) {
   // Abort previous game's listeners
   abortController?.abort();
@@ -153,6 +154,7 @@ export async function initGame(
   const startBpmElem = $(container, "#startBpm") as HTMLElement;
   const startDurationElem = $(container, "#startDuration") as HTMLElement;
   const startNpsElem = $(container, "#startNps") as HTMLElement;
+  const startHintElem = $(container, "#startHint") as HTMLElement;
   const endOverlayElem = $(container, "#endOverlay") as HTMLDivElement;
   const endGradeElem = $(container, "#endGrade") as HTMLElement;
   const endScoreElem = $(container, "#endScore") as HTMLElement;
@@ -160,14 +162,19 @@ export async function initGame(
   const endMaxComboElem = $(container, "#endMaxCombo") as HTMLElement;
   const endHitsElem = $(container, "#endHits") as HTMLElement;
   const endFailsElem = $(container, "#endFails") as HTMLElement;
+  const endSoloStatsElem = $(container, "#endSoloStats") as HTMLElement;
+  const endLeaderboardElem = $(container, "#endLeaderboard") as HTMLElement;
   const endReplayBtn = $(container, "#endReplay") as HTMLButtonElement;
   const endBackBtn = $(container, "#endBack") as HTMLButtonElement;
   const backToMarketplaceBtn = $(container, "#backToMarketplace") as HTMLButtonElement;
+  const scoreTickerElem = $(container, "#scoreTicker") as HTMLDivElement;
 
   // Reset overlay state for new game
   startOverlayElem.classList.remove("hidden");
   startOverlayElem.querySelector(".panel")!.classList.add("loading");
   endOverlayElem.classList.add("hidden");
+  scoreTickerElem.classList.add("hidden");
+  scoreTickerElem.innerHTML = "";
   gameStarted = false;
 
   // Load settings
@@ -207,6 +214,64 @@ export async function initGame(
   startOverlayElem.querySelector(".panel")!.classList.remove("loading");
 
 
+  // --- Multiplayer setup ---
+
+  const peerEndStats = new Map<string, EndStats>();
+  let lastScoreSend = 0;
+
+  if (session) {
+    // Show score ticker
+    scoreTickerElem.classList.remove("hidden");
+    updateTickerRow(scoreTickerElem, "local", session.localName, 0, 0, true);
+
+    for (const [peerId] of session.peers) {
+      updateTickerRow(scoreTickerElem, peerId, session.getPeerName(peerId), 0, 0, false);
+    }
+
+    // Live score from peers
+    session.onPeerScore = (peerId, data) => {
+      updateTickerRow(scoreTickerElem, peerId, session.getPeerName(peerId), data.score, data.combo, false);
+    };
+
+    // End stats from peers
+    session.onPeerEndStats = (peerId, data) => {
+      peerEndStats.set(peerId, data);
+    };
+
+    // Peer requested replay — restart if we have onReplay
+    session.onSongSelected = () => {
+      if (onReplay) onReplay();
+    };
+
+    // Score broadcasting on combo change
+    game.combo.onChange = () => {
+      const now = performance.now();
+      if (now - lastScoreSend < 250) return;
+      lastScoreSend = now;
+      session.sendScore({
+        score: game.combo.score,
+        combo: game.combo.combo,
+        hits: game.combo.hits,
+        fails: game.combo.fails,
+      });
+      updateTickerRow(scoreTickerElem, "local", session.localName, game.combo.score, game.combo.combo, true);
+    };
+
+    // Multiplayer: countdown then start
+    startHintElem.textContent = "Starting in 3...";
+    let count = 3;
+    const countdownInterval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        startHintElem.textContent = `Starting in ${count}...`;
+      } else {
+        clearInterval(countdownInterval);
+        startGameplay();
+      }
+    }, 1000);
+  }
+
+
   // --- Event handlers (all use signal for cleanup) ---
 
   function startGameplay() {
@@ -219,27 +284,92 @@ export async function initGame(
   function onSongEnd() {
     const stats = game.getStats();
     const grade = getGrade(stats.accuracy);
+
     endGradeElem.textContent = grade.letter;
     endGradeElem.style.color = grade.color;
     endGradeElem.style.textShadow = `0 0 40px ${grade.color}, 0 0 80px ${grade.color}`;
+    gameStarted = false;
+
+    // Always populate solo stats
     endScoreElem.textContent = String(stats.score);
     endAccuracyElem.textContent = `${(stats.accuracy * 100).toFixed(1)}%`;
     endMaxComboElem.textContent = String(stats.maxCombo);
     endHitsElem.textContent = String(stats.hits);
     endFailsElem.textContent = String(stats.fails);
-    endOverlayElem.classList.remove("hidden");
-    gameStarted = false;
+    endSoloStatsElem.classList.remove("hidden");
+
+    if (session) {
+      // Send our stats to peers
+      session.sendEndStats({ ...stats, grade: grade.letter });
+
+      // Show leaderboard below stats
+      endLeaderboardElem.classList.remove("hidden");
+
+      function buildLeaderboard() {
+        const entries: { name: string; score: number; accuracy: number; maxCombo: number; grade: string; gradeColor: string; isLocal: boolean }[] = [];
+
+        entries.push({
+          name: session!.localName,
+          score: stats.score,
+          accuracy: stats.accuracy,
+          maxCombo: stats.maxCombo,
+          grade: grade.letter,
+          gradeColor: grade.color,
+          isLocal: true,
+        });
+
+        for (const [peerId, peerStats] of peerEndStats) {
+          const peerGrade = getGrade(peerStats.accuracy);
+          entries.push({
+            name: session!.getPeerName(peerId),
+            score: peerStats.score,
+            accuracy: peerStats.accuracy,
+            maxCombo: peerStats.maxCombo,
+            grade: peerStats.grade,
+            gradeColor: peerGrade.color,
+            isLocal: false,
+          });
+        }
+
+        entries.sort((a, b) => b.score - a.score);
+
+        endLeaderboardElem.innerHTML = entries.map((e, i) => `
+          <div class="leaderboard-row${e.isLocal ? " local" : ""}">
+            <span class="leaderboard-rank">#${i + 1}</span>
+            <span class="leaderboard-grade" style="color:${e.gradeColor};text-shadow:0 0 8px ${e.gradeColor}">${e.grade}</span>
+            <span class="leaderboard-name">${e.name}</span>
+            <span class="leaderboard-score">${e.score}</span>
+            <span class="leaderboard-detail">${(e.accuracy * 100).toFixed(1)}% / ${e.maxCombo}x</span>
+          </div>
+        `).join("");
+      }
+
+      // Build immediately with whatever we have, rebuild when more arrive
+      buildLeaderboard();
+      session.onPeerEndStats = (peerId, data) => {
+        peerEndStats.set(peerId, data);
+        buildLeaderboard();
+      };
+
+      // Show after brief delay so animation plays
+      setTimeout(() => endOverlayElem.classList.remove("hidden"), 200);
+      scoreTickerElem.classList.add("hidden");
+    } else {
+      // Solo mode: hide leaderboard
+      endLeaderboardElem.classList.add("hidden");
+      endOverlayElem.classList.remove("hidden");
+    }
   }
 
   function keyPressed(e: any) {
     if (!endOverlayElem.classList.contains("hidden")) return;
 
     if (e.key == " ") {
-      if (!gameStarted) {
+      if (!gameStarted && !session) {
         startGameplay();
-      } else if (audioPlayerElem.paused) {
+      } else if (gameStarted && audioPlayerElem.paused) {
         audioPlayerElem.play();
-      } else {
+      } else if (gameStarted) {
         audioPlayerElem.pause();
       }
       e.preventDefault();
@@ -256,19 +386,28 @@ export async function initGame(
   backToMarketplaceBtn.addEventListener("click", onBack, { signal });
   endBackBtn.addEventListener("click", onBack, { signal });
   endReplayBtn.addEventListener("click", () => {
-    endOverlayElem.classList.add("hidden");
-    startOverlayElem.classList.remove("hidden");
-    startOverlayElem.querySelector(".panel")!.classList.remove("loading");
-    gameStarted = false;
-    game = new Game(cloneNotes(songData.difficulties[diffI].notes), songData.lightEvents, meta, difficulty);
-    game.setTimeOffset(timeOffset);
-    game.setHitWindow(hitTime);
-    game.visuals.backgroundVisuals.updateVisibility(visibility);
-    audioPlayerElem.currentTime = 0;
+    if (onReplay) {
+      // Multiplayer: restart same game for this player, peers get songSelect
+      session?.sendSongSelect({ songId, diffI });
+      onReplay();
+    } else {
+      // Solo: reset locally
+      endOverlayElem.classList.add("hidden");
+      startOverlayElem.classList.remove("hidden");
+      startOverlayElem.querySelector(".panel")!.classList.remove("loading");
+      gameStarted = false;
+      game = new Game(cloneNotes(songData.difficulties[diffI].notes), songData.lightEvents, meta, difficulty);
+      game.setTimeOffset(timeOffset);
+      game.setHitWindow(hitTime);
+      game.visuals.backgroundVisuals.updateVisibility(visibility);
+      audioPlayerElem.currentTime = 0;
+    }
   }, { signal });
 
   // Game controls
-  startOverlayElem.addEventListener("click", startGameplay, { signal });
+  if (!session) {
+    startOverlayElem.addEventListener("click", startGameplay, { signal });
+  }
   document.body.addEventListener("keydown", keyPressed, { signal });
   window.addEventListener("resize", game.visuals.resize, { signal });
   audioPlayerElem.addEventListener("ended", onSongEnd, { signal });
@@ -305,6 +444,20 @@ export async function initGame(
     game.update(audioPlayerElem.currentTime);
   }
   animate();
+}
+
+
+// Score ticker helpers
+
+function updateTickerRow(ticker: HTMLElement, id: string, name: string, score: number, combo: number, isLocal: boolean) {
+  let row = ticker.querySelector(`[data-peer="${id}"]`) as HTMLElement;
+  if (!row) {
+    row = document.createElement("div");
+    row.className = `score-ticker-row${isLocal ? " local" : ""}`;
+    row.dataset.peer = id;
+    ticker.appendChild(row);
+  }
+  row.innerHTML = `<span class="ticker-name">${name}</span><span class="ticker-score">${score}</span><span class="ticker-combo">${combo}x</span>`;
 }
 
 

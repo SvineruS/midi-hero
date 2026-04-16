@@ -1,22 +1,60 @@
 import { useEffect, useState } from "preact/hooks";
-import { FaGamepad, FaHeart, FaPlay, FaSearch, FaStop, FaTrashAlt } from "react-icons/fa";
+import { FaGamepad, FaHeart, FaPlay, FaStop, FaTrashAlt } from "react-icons/fa";
 import { searchSongs } from "../songs/bsApi.ts";
 import { AudioProvider, useAudio } from "./utils/audioContext.tsx";
 import { SavedSongsProvider, useSavedSongs } from "./utils/savedContext.tsx";
 import { InfiniteScroll } from "./utils/infScroll.tsx";
+import { SearchBar } from "../shared/SearchBar.tsx";
+import { formatSeconds } from "../shared/formatSeconds.ts";
+import type { MultiplayerRoom } from "../multiplayer/room.ts";
 
-function App({ onPlay }: { onPlay: (songId: string, diffI: number) => void }) {
+function App({ onPlay, onJoinLobby }: {
+  onPlay: (songId: string, diffI: number) => void;
+  onJoinLobby?: (session: MultiplayerRoom) => void;
+}) {
+  const [showMpModal, setShowMpModal] = useState(false);
+  const [MpModal, setMpModal] = useState<any>(null);
+
+  async function openMultiplayer() {
+    if (!MpModal) {
+      const { MultiplayerModal } = await import("../multiplayer/LobbyUI.tsx");
+      setMpModal(() => MultiplayerModal);
+    }
+    setShowMpModal(true);
+  }
+
   return (
     <AudioProvider>
       <SavedSongsProvider>
         <div className="min-h-screen px-4 py-8 sm:px-8">
-          <h1 className="text-center text-4xl sm:text-5xl font-extrabold mb-10 tracking-tight"
+
+          <h1 className="text-center text-4xl sm:text-5xl font-extrabold mb-4 tracking-tight"
               style={{ color: "#fff", textShadow: "0 0 30px rgba(80,226,227,0.5), 0 0 60px rgba(241,100,236,0.3)" }}>
             MIDI HERO
           </h1>
+
+          {onJoinLobby && (
+            <div className="flex justify-center mb-8">
+              <button onClick={openMultiplayer}
+                      className="btn-listen px-5 py-2 rounded-lg text-sm font-semibold transition">
+                Multiplayer
+              </button>
+            </div>
+          )}
+
           <SavedSongs onPlay={onPlay}/>
           <Search onPlay={onPlay}/>
         </div>
+
+        {showMpModal && MpModal && (
+          <MpModal
+            onClose={() => setShowMpModal(false)}
+            onJoinLobby={(session: MultiplayerRoom) => {
+              setShowMpModal(false);
+              onJoinLobby?.(session);
+            }}
+          />
+        )}
       </SavedSongsProvider>
     </AudioProvider>
   )
@@ -28,9 +66,9 @@ function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void })
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(query_) {
-    const results = await searchSongs(query_);
-    setQuery(query_);
+  async function onSubmit(q: string) {
+    const results = await searchSongs(q);
+    setQuery(q);
     setPage(0);
     setSearchResults(results);
   }
@@ -45,9 +83,7 @@ function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void })
     setLoading(false);
   }
 
-  useEffect(() => {
-    onSubmit("");
-  }, []);
+  useEffect(() => { onSubmit(""); }, []);
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -60,26 +96,6 @@ function Search({ onPlay }: { onPlay: (songId: string, diffI: number) => void })
       {loading && <div className="text-sm text-gray-500">Loading...</div>}
     </div>
   )
-}
-
-function SearchBar({ onSubmit }) {
-  async function search(e) {
-    e.preventDefault();
-    await onSubmit(e.target.searchInput.value);
-  }
-
-  return (
-    <form onSubmit={search}
-          className="search-bar flex items-center rounded-lg p-2 border transition-colors focus-within:border-cyan-500/60">
-      <FaSearch className="w-4 h-4 ml-2 text-gray-500 flex-shrink-0"/>
-      <input type="text" name="searchInput" placeholder="Song name or author"
-             className="flex-grow ml-3 bg-transparent border-none outline-none text-gray-200 text-sm placeholder-gray-500"/>
-      <button type="submit"
-              className="btn-search ml-2 px-4 py-1.5 rounded-md text-sm font-medium transition flex-shrink-0">
-        Search
-      </button>
-    </form>
-  );
 }
 
 function SavedSongs({ onPlay }: { onPlay: (songId: string, diffI: number) => void }) {
@@ -192,12 +208,6 @@ function Song({ song, onPlay }: { song: any, onPlay: (songId: string, diffI: num
       </div>
     </div>
   );
-}
-
-function formatSeconds(seconds) {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
 }
 
 export default App

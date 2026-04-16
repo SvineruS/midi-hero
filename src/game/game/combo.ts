@@ -10,6 +10,7 @@ export class Combo {
     combo = 0;
     maxCombo = 0;
     score = 0;
+    onChange?: () => void;
 
     constructor() {
         this._updateText();
@@ -18,14 +19,16 @@ export class Combo {
     onFail() {
         this.fails++;
         this.combo = 0;
-        this._updateText()
+        this._updateText();
+        this.onChange?.();
     }
     onSuccess() {
         this.hits++;
         this.combo++;
         if (this.combo > this.maxCombo) this.maxCombo = this.combo;
         this.score += this.combo > COMBO_SCORES.length-1 ? COMBO_SCORES[COMBO_SCORES.length - 1] : COMBO_SCORES[this.combo];
-        this._updateText()
+        this._updateText();
+        this.onChange?.();
     }
     _updateText() {
         text1.geometry = createText(`   Score: ${this.score}\n   Combo: ${this.combo}\n   Hits: ${this.hits}\n   Fails: ${this.fails}`);
