@@ -81,6 +81,23 @@ body {
     border-color: rgba(255, 255, 255, 0.12);
 }
 
+/* Tabs */
+
+.tab-btn {
+    color: #8aa3bc;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+.tab-btn:hover {
+    color: #e0e8f0;
+}
+.tab-btn.active {
+    color: #50e2e3;
+    background: rgba(80, 226, 227, 0.08);
+    border-color: rgba(80, 226, 227, 0.25);
+}
+
 .search-bar {
     background: rgba(20, 15, 35, 0.8);
     border-color: rgba(255, 255, 255, 0.08);

@@ -9,13 +9,16 @@ import { SearchFilterPanel } from "../shared/SearchFilters.tsx";
 import { formatSeconds } from "../shared/formatSeconds.ts";
 import type { MultiplayerRoom } from "../multiplayer/room.ts";
 
+type Tab = "search" | "saved" | "similar";
+
 function App({ onPlay, onJoinLobby }: {
   onPlay: (songId: string, diffI: number) => void;
   onJoinLobby?: (session: MultiplayerRoom) => void;
 }) {
   const [showMpModal, setShowMpModal] = useState(false);
   const [MpModal, setMpModal] = useState<any>(null);
-  const [similarSongs, setSimilarSongs] = useState<any[] | null>(null);
+  const [tab, setTab] = useState<Tab>("saved");
+  const [similarSongs, setSimilarSongs] = useState<any[]>([]);
   const [similarLoading, setSimilarLoading] = useState(false);
   const [similarSource, setSimilarSource] = useState("");
 
@@ -28,6 +31,7 @@ function App({ onPlay, onJoinLobby }: {
   }
 
   async function handleSimilar(songId: string, songName: string) {
+    setTab("similar");
     setSimilarLoading(true);
     setSimilarSource(songName);
     setSimilarSongs([]);
@@ -36,17 +40,12 @@ function App({ onPlay, onJoinLobby }: {
     setSimilarLoading(false);
   }
 
-  function clearSimilar() {
-    setSimilarSongs(null);
-    setSimilarSource("");
-  }
-
   return (
     <AudioProvider>
       <SavedSongsProvider>
         <div className="min-h-screen px-4 py-8 sm:px-8">
 
-          <div className="text-center mb-10">
+          <div className="text-center mb-6">
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight"
                 style={{ color: "#fff", textShadow: "0 0 30px rgba(80,226,227,0.5), 0 0 60px rgba(241,100,236,0.3)" }}>
               MIDI HERO
@@ -59,14 +58,27 @@ function App({ onPlay, onJoinLobby }: {
             )}
           </div>
 
-          {similarSongs !== null && (
-            <SimilarSection songs={similarSongs} loading={similarLoading}
-                           sourceName={similarSource} onPlay={onPlay}
-                           onSimilar={handleSimilar} onClose={clearSimilar}/>
-          )}
+          {/* Tabs */}
+          <div className="flex justify-center gap-1 mb-8">
+            <TabButton label="Search" active={tab === "search"} onClick={() => setTab("search")}/>
+            <TabButton label="Saved" active={tab === "saved"} onClick={() => setTab("saved")}/>
+            {similarSource && (
+              <TabButton label={`Similar to ${similarSource}`} active={tab === "similar"} onClick={() => setTab("similar")}/>
+            )}
+          </div>
 
-          <SavedSongs onPlay={onPlay} onSimilar={handleSimilar}/>
-          <Search onPlay={onPlay} onSimilar={handleSimilar}/>
+          <div style={{ display: tab === "search" ? "" : "none" }}>
+            <Search onPlay={onPlay} onSimilar={handleSimilar}/>
+          </div>
+          <div style={{ display: tab === "saved" ? "" : "none" }}>
+            <SavedSongs onPlay={onPlay} onSimilar={handleSimilar}/>
+          </div>
+          {similarSource && (
+            <div style={{ display: tab === "similar" ? "" : "none" }}>
+              <SimilarSection songs={similarSongs} loading={similarLoading}
+                             onPlay={onPlay} onSimilar={handleSimilar}/>
+            </div>
+          )}
         </div>
 
         {showMpModal && MpModal && (
@@ -83,28 +95,23 @@ function App({ onPlay, onJoinLobby }: {
   )
 }
 
-function SimilarSection({ songs, loading, sourceName, onPlay, onSimilar, onClose }: {
-  songs: any[]; loading: boolean; sourceName: string;
+function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick}
+            className={`tab-btn ${active ? "active" : ""} px-4 py-2 text-sm font-medium rounded-lg transition truncate max-w-[200px]`}>
+      {label}
+    </button>
+  );
+}
+
+function SimilarSection({ songs, loading, onPlay, onSimilar }: {
+  songs: any[]; loading: boolean;
   onPlay: (songId: string, diffI: number) => void;
   onSimilar: (songId: string, songName: string) => void;
-  onClose: () => void;
 }) {
-  return (
-    <div className="flex flex-col items-center gap-4 mb-10 w-full">
-      <div className="flex items-center gap-3">
-        <h2 className="text-xl font-semibold text-gray-300">
-          Similar to <span className="text-cyan-400">{sourceName}</span>
-        </h2>
-        <button onClick={onClose} className="text-xs text-gray-500 hover:text-gray-300 transition">✕ Close</button>
-      </div>
-      {loading
-        ? <div className="text-sm text-gray-500">Finding similar songs...</div>
-        : songs.length === 0
-          ? <div className="text-sm text-gray-500">No similar songs found</div>
-          : <SongList songs={songs} onPlay={onPlay} onSimilar={onSimilar}/>
-      }
-    </div>
-  )
+  if (loading) return <div className="text-center text-sm text-gray-500">Finding similar songs...</div>;
+  if (!songs.length) return <div className="text-center text-sm text-gray-500">No similar songs found</div>;
+  return <SongList songs={songs} onPlay={onPlay} onSimilar={onSimilar}/>;
 }
 
 function Search({ onPlay, onSimilar }: { onPlay: (songId: string, diffI: number) => void; onSimilar: (songId: string, songName: string) => void }) {
@@ -147,7 +154,6 @@ function Search({ onPlay, onSimilar }: { onPlay: (songId: string, diffI: number)
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <h2 className="text-xl font-semibold text-gray-300">Search for a Song</h2>
       <div className="w-full max-w-xl">
         <SearchBar onSubmit={onSubmit}/>
       </div>
@@ -161,14 +167,10 @@ function Search({ onPlay, onSimilar }: { onPlay: (songId: string, diffI: number)
 
 function SavedSongs({ onPlay, onSimilar }: { onPlay: (songId: string, diffI: number) => void; onSimilar: (songId: string, songName: string) => void }) {
   const { savedSongs } = useSavedSongs();
-  if (!savedSongs.length) return null;
 
-  return (
-    <div className="flex flex-col items-center gap-4 mb-10 w-full">
-      <h2 className="text-xl font-semibold text-gray-300">Saved Songs</h2>
-      <SongList songs={savedSongs} onPlay={onPlay} onSimilar={onSimilar}/>
-    </div>
-  )
+  if (!savedSongs.length) return <div className="text-center text-sm text-gray-500">No saved songs yet</div>;
+
+  return <SongList songs={savedSongs} onPlay={onPlay} onSimilar={onSimilar}/>;
 }
 
 function SongList({ songs, onPlay, onSimilar }: { songs: any[], onPlay: (songId: string, diffI: number) => void; onSimilar?: (songId: string, songName: string) => void }) {
