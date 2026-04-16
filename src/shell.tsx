@@ -11,12 +11,17 @@ let currentSession: MultiplayerRoom | null = null;
 let isInGame = false;
 let navigatingFromPopstate = false;
 
-function showMarketplace() {
-  if (isInGame) {
-    import("./game/main.ts").then(({ stopGame }) => stopGame()).catch(() => {});
-    isInGame = false;
-  }
+async function stopCurrentGame() {
+  if (!isInGame) return;
+  try {
+    const { stopGame } = await import("./game/main.ts");
+    stopGame();
+  } catch {}
+  isInGame = false;
+}
 
+function showMarketplace() {
+  stopCurrentGame();
   currentSession = null;
   gameContainer.style.display = "none";
   marketplaceContainer.style.display = "";
@@ -27,32 +32,27 @@ function showMarketplace() {
 }
 
 async function showLobby(session: MultiplayerRoom) {
-  if (isInGame) {
-    import("./game/main.ts").then(({ stopGame }) => stopGame()).catch(() => {});
-    isInGame = false;
-  }
-
+  await stopCurrentGame();
   currentSession = session;
   gameContainer.style.display = "none";
   marketplaceContainer.style.display = "";
+
+  // Wire the ONE callback: when room says "game ready", start it
+  session.onGameReady = (songId, diffI) => startGame(songId, diffI, session);
 
   const { default: LobbyUI } = await import("./multiplayer/LobbyUI.tsx");
 
   render(
     <LobbyUI
       session={session}
-      onStartGame={(songId, diffI, sess) => startGame(songId, diffI, sess)}
-      onCancel={() => {
-        session.leave();
-        currentSession = null;
-        showMarketplace();
-      }}
+      onCancel={() => { session.leave(); currentSession = null; showMarketplace(); }}
     />,
     rootEl,
   );
 }
 
 async function startGame(songId: string, diffI: number, session: MultiplayerRoom | null = null) {
+  await stopCurrentGame();
   currentSession = session;
   isInGame = true;
   marketplaceContainer.style.display = "none";
@@ -62,17 +62,13 @@ async function startGame(songId: string, diffI: number, session: MultiplayerRoom
     history.pushState({ game: `${songId}-${diffI}` }, "", `#${songId}-${diffI}`);
   }
 
-  const { initGame, stopGame } = await import("./game/main.ts");
+  const { initGame } = await import("./game/main.ts");
 
   const onBack = session
-    ? () => { stopGame(); isInGame = false; showLobby(session); }
-    : () => { stopGame(); isInGame = false; showMarketplace(); };
+    ? () => { isInGame = false; showLobby(session); }
+    : () => { isInGame = false; showMarketplace(); };
 
-  const onReplay = session
-    ? () => { stopGame(); isInGame = false; startGame(songId, diffI, session); }
-    : null;
-
-  await initGame(gameContainer, songId, diffI, onBack, session, onReplay);
+  await initGame(gameContainer, songId, diffI, onBack, session);
 }
 
 // Handle Back/Forward
@@ -92,7 +88,6 @@ window.addEventListener("popstate", () => {
 const bootHash = location.hash.substring(1);
 if (bootHash && bootHash.includes("-")) {
   const [songId, diffI] = bootHash.split("-");
-  // Replace the initial entry so Back from game goes to marketplace, not to same game
   history.replaceState(null, "", window.location.pathname);
   startGame(songId, parseInt(diffI));
 } else {

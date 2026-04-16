@@ -1,11 +1,6 @@
-import { useState, useEffect, useRef } from "preact/hooks";
+import { useState, useEffect } from "preact/hooks";
 import { MultiplayerRoom, generateRoomCode } from "./room.ts";
-import type { SongSelection } from "./types.ts";
-import { loadOrDownloadSong } from "../songs/songLoader.ts";
-import { AudioProvider } from "../marketplace/utils/audioContext.tsx";
-import { SavedSongsProvider, useSavedSongs } from "../marketplace/utils/savedContext.tsx";
-import { SongCard } from "../shared/SongCard.tsx";
-import { SongGrid } from "../shared/SongGrid.tsx";
+import App from "../marketplace/App.tsx";
 
 
 // --- Modal for create/join ---
@@ -23,16 +18,13 @@ export function MultiplayerModal({ onClose, onJoinLobby }: {
   }
 
   function createRoom() {
-    const playerName = saveName(name);
-    const code = generateRoomCode();
-    onJoinLobby(new MultiplayerRoom(code, playerName, true));
+    onJoinLobby(new MultiplayerRoom(generateRoomCode(), saveName(name), true));
   }
 
   function joinRoom() {
     const code = codeInput.trim().toUpperCase();
     if (code.length !== 4) return;
-    const playerName = saveName(name);
-    onJoinLobby(new MultiplayerRoom(code, playerName, false));
+    onJoinLobby(new MultiplayerRoom(code, saveName(name), false));
   }
 
   return (
@@ -82,26 +74,13 @@ export function MultiplayerModal({ onClose, onJoinLobby }: {
 }
 
 
-// --- Full-page lobby ---
+// --- Lobby header bar ---
 
-interface LobbyProps {
-  session: MultiplayerRoom;
-  onStartGame: (songId: string, diffI: number, session: MultiplayerRoom) => void;
-  onCancel: () => void;
-}
-
-export default function LobbyUI({ session, onStartGame, onCancel }: LobbyProps) {
+function LobbyHeader({ session, onCancel }: { session: MultiplayerRoom; onCancel: () => void }) {
   const [peers, setPeers] = useState<string[]>([]);
-  const [status, setStatus] = useState("Waiting for players...");
+  const [status, setStatus] = useState("");
   const [statusType, setStatusType] = useState<"" | "downloading" | "ready">("");
-  const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const selectedSongRef = useRef<{ songId: string; diffI: number } | null>(null);
-
-  function launchGame() {
-    const sel = selectedSongRef.current;
-    if (sel) onStartGame(sel.songId, sel.diffI, session);
-  }
 
   function copyCode() {
     navigator.clipboard.writeText(session.roomCode);
@@ -110,132 +89,72 @@ export default function LobbyUI({ session, onStartGame, onCancel }: LobbyProps) 
   }
 
   useEffect(() => {
-    session.onPeersChanged = () => {
-      setPeers(Array.from(session.peers.keys()));
-    };
-
-    session.onSongSelected = async (sel: SongSelection) => {
-      selectedSongRef.current = sel;
-      setStatus("Downloading song...");
-      setStatusType("downloading");
-      setDownloading(true);
-      try {
-        await loadOrDownloadSong(sel.songId);
-        session.markReady();
-        setStatus("Ready! Waiting for others...");
-        setStatusType("ready");
-      } catch (e) {
-        setStatus("Download failed!");
-        setStatusType("");
-        console.error(e);
-      }
-      setDownloading(false);
-    };
-
-    session.onAllReady = () => {
-      if (session.isHost) {
-        session.sendStart({});
-        launchGame();
-      }
-    };
-
-    session.onStart = () => {
-      launchGame();
+    session.onPeersChanged = () => setPeers([...session.peers.keys()]);
+    session.onStatusChange = (s) => {
+      if (s === "downloading") { setStatus("Downloading song..."); setStatusType("downloading"); }
+      else if (s === "ready") { setStatus("Ready! Waiting for others..."); setStatusType("ready"); }
+      else { setStatus(""); setStatusType(""); }
     };
   }, [session]);
 
-  function handleSongSelect(songId: string, diffI: number) {
-    if (downloading) return;
-    selectedSongRef.current = { songId, diffI };
-    session.sendSongSelect({ songId, diffI });
-
-    setStatus("Downloading song...");
-    setStatusType("downloading");
-    setDownloading(true);
-    loadOrDownloadSong(songId).then(() => {
-      session.markReady();
-      setStatus("Ready! Waiting for others...");
-      setStatusType("ready");
-      setDownloading(false);
-    });
-  }
-
   return (
-    <AudioProvider>
-      <SavedSongsProvider>
-        <div className="min-h-screen px-4 py-8 sm:px-8">
-
-          {/* Title */}
-          <h1 className="text-center text-3xl sm:text-4xl font-extrabold mb-6 tracking-tight"
-              style={{ color: "#fff", textShadow: "0 0 30px rgba(80,226,227,0.5), 0 0 60px rgba(241,100,236,0.3)" }}>
-            MIDI HERO
-          </h1>
-
-          {/* Lobby card */}
-          <div className="lobby-card max-w-6xl mx-auto mb-8 rounded-xl overflow-hidden">
-
-            {/* Room code bar */}
-            <div className="flex items-center justify-between px-5 py-3"
-                 style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-              <div className="flex items-center gap-3">
-                <span className="text-xs uppercase tracking-wider text-gray-500">Room</span>
-                <button onClick={copyCode}
-                        className="room-code text-xl font-mono font-bold tracking-[0.3em] px-3 py-1 rounded-md">
-                  {session.roomCode}
-                </button>
-                {copied && <span className="text-xs text-green-400">Copied!</span>}
-              </div>
-              <button onClick={() => { session.leave(); onCancel(); }}
-                      className="btn-leave px-3 py-1.5 rounded-md text-xs font-medium">
-                Leave Room
-              </button>
-            </div>
-
-            {/* Players + status */}
-            <div className="px-5 py-4">
-              <div className="flex flex-wrap gap-2 mb-3">
-                <span className="player-pill px-3 py-1.5 rounded-full text-xs font-medium">
-                  {session.localName} (you)
-                </span>
-                {peers.map(peerId => (
-                  <span key={peerId}
-                        className={`player-pill ${session.isPeerReady(peerId) ? "ready" : "peer"} px-3 py-1.5 rounded-full text-xs font-medium`}>
-                    {session.getPeerName(peerId)}
-                    {session.isPeerReady(peerId) && " ✓"}
-                  </span>
-                ))}
-              </div>
-
-              <div className={`lobby-status ${statusType} text-sm`}>
-                {peers.length === 0 ? "Share the room code to invite players" : status}
-              </div>
-            </div>
-          </div>
-
-          {/* Song browser */}
-          {!downloading && (
-            <div className="flex flex-col gap-8">
-              <SavedSongsSection onPlay={handleSongSelect}/>
-              <SongGrid title="Pick a song for everyone" onPlay={handleSongSelect}/>
-            </div>
-          )}
+    <div className="lobby-card max-w-6xl mx-auto mb-6 rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3"
+           style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+        <div className="flex items-center gap-3">
+          <span className="text-xs uppercase tracking-wider text-gray-500">Room</span>
+          <button onClick={copyCode}
+                  className="room-code text-xl font-mono font-bold tracking-[0.3em] px-3 py-1 rounded-md">
+            {session.roomCode}
+          </button>
+          {copied && <span className="text-xs text-green-400">Copied!</span>}
         </div>
-      </SavedSongsProvider>
-    </AudioProvider>
+        <button onClick={onCancel}
+                className="btn-leave px-3 py-1.5 rounded-md text-xs font-medium">
+          Leave Room
+        </button>
+      </div>
+
+      <div className="px-5 py-3">
+        <div className="flex flex-wrap gap-2 mb-2">
+          <span className="player-pill px-3 py-1.5 rounded-full text-xs font-medium">
+            {session.localName} (you)
+          </span>
+          {peers.map(peerId => (
+            <span key={peerId}
+                  className={`player-pill ${session.isPeerReady(peerId) ? "ready" : "peer"} px-3 py-1.5 rounded-full text-xs font-medium`}>
+              {session.getPeerName(peerId)}
+              {session.isPeerReady(peerId) && " ✓"}
+            </span>
+          ))}
+        </div>
+        {status ? (
+          <div className={`lobby-status ${statusType} text-sm`}>{status}</div>
+        ) : peers.length === 0 ? (
+          <div className="lobby-status text-sm">Share the room code to invite players</div>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
 
-function SavedSongsSection({ onPlay }: { onPlay: (songId: string, diffI: number) => void }) {
-  const { savedSongs } = useSavedSongs();
-  if (!savedSongs.length) return null;
+// --- Full lobby page: header + marketplace App ---
+
+export default function LobbyUI({ session, onCancel }: {
+  session: MultiplayerRoom;
+  onCancel: () => void;
+}) {
+  function handlePlay(songId: string, diffI: number) {
+    session.selectSong(songId, diffI);
+  }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <h2 className="text-xl font-semibold text-gray-300">Saved Songs</h2>
-      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
-        {savedSongs.map((song: any) => <SongCard key={song.id} song={song} onPlay={onPlay}/>)}
+    <div>
+      <div className="px-4 pt-8 sm:px-8">
+        <LobbyHeader session={session} onCancel={onCancel}/>
       </div>
+      <App onPlay={handlePlay}/>
     </div>
   );
 }

@@ -119,7 +119,6 @@ export async function initGame(
   diffI: number,
   onBack: () => void,
   session: MultiplayerRoom | null = null,
-  onReplay: (() => void) | null = null,
 ) {
   // Abort previous game's listeners
   abortController?.abort();
@@ -239,11 +238,6 @@ export async function initGame(
     // End stats from peers
     session.onPeerEndStats = (peerId, data) => {
       peerEndStats.set(peerId, data);
-    };
-
-    // Peer requested replay — restart if we have onReplay
-    session.onSongSelected = () => {
-      if (onReplay) onReplay();
     };
 
     // Score broadcasting on combo change
@@ -389,10 +383,9 @@ export async function initGame(
   backToMarketplaceBtn.addEventListener("click", onBack, { signal });
   endBackBtn.addEventListener("click", onBack, { signal });
   endReplayBtn.addEventListener("click", () => {
-    if (onReplay) {
-      // Multiplayer: restart same game for this player, peers get songSelect
-      session?.sendSongSelect({ songId, diffI });
-      onReplay();
+    if (session) {
+      // Multiplayer: same as selecting a song — room handles the rest
+      session.selectSong(songId, diffI);
     } else {
       // Solo: reset locally
       endOverlayElem.classList.add("hidden");
