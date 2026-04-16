@@ -1,5 +1,5 @@
 const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/game-BWpqLoTl.js","assets/3d-CKs7Nw1Z.js"])))=>i.map(i=>d[i]);
-import{_ as I,S as b,l as be,f as he}from"./index-DMb2-u1l.js";const j=.03+.1;function ye(e){return String(j-e)}function Ee(e){return j-e}function q(e){return e.map(v=>({...v,status:void 0}))}function K(e){return e>=1?{letter:"S+",color:"#50e2e3"}:e>=.99?{letter:"S",color:"#50e2e3"}:e>=.95?{letter:"A",color:"#4ade80"}:e>=.85?{letter:"B",color:"#a3e635"}:e>=.75?{letter:"C",color:"#eab308"}:e>=.6?{letter:"D",color:"#f97316"}:e>=.4?{letter:"E",color:"#ef4444"}:{letter:"F",color:"#991b1b"}}const ke={KeyS:0,KeyD:1,KeyK:2,KeyL:3},Se=`
+import{_ as I,S as b,l as be,f as he}from"./index-B-za_zK4.js";const j=.03+.1;function ye(e){return String(j-e)}function Ee(e){return j-e}function q(e){return e.map(v=>({...v,status:void 0}))}function K(e){return e>=1?{letter:"S+",color:"#50e2e3"}:e>=.99?{letter:"S",color:"#50e2e3"}:e>=.95?{letter:"A",color:"#4ade80"}:e>=.85?{letter:"B",color:"#a3e635"}:e>=.75?{letter:"C",color:"#eab308"}:e>=.6?{letter:"D",color:"#f97316"}:e>=.4?{letter:"E",color:"#ef4444"}:{letter:"F",color:"#991b1b"}}const ke={KeyS:0,KeyD:1,KeyK:2,KeyL:3},Se=`
 <div id="failFlash"></div>
 <audio id="audioPlayer"></audio>
 <div class="header">
