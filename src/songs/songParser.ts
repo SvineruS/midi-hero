@@ -9,18 +9,17 @@ export function parseDifficultyFile(difficultyFile, startBpm) {
   const notes = [];
   const lightEvents = [];
 
-
-  const viewed = new Set();
+  const lastNoteTime = [0, 0, 0, 0]; // per lane (4 lanes)
 
   for (const colorNote of data.difficulty.colorNotes) {
     const time = bpm.toRealTime(colorNote.time);
     const note = colorNote.posX;
+    if (note < 0 || note > 3) continue;
 
-    const viewKey = `${note}-${Math.floor(time / 0.100)}`;
-    if (viewed.has(viewKey)) continue;
-    viewed.add(viewKey);
+    if (time - lastNoteTime[note] < 0.250) continue;
+    lastNoteTime[note] = time;
 
-    notes.push({ time, note, duration: 0.1, });
+    notes.push({ time, note, duration: 0.1 });
   }
 
 
