@@ -17,6 +17,7 @@ import { interpolate, lerp } from "../utils.ts";
 import { backgroundUniforms } from "../3d/3d_background.ts";
 import { Game } from "./game.ts";
 import { LightEvent, NoteEvent } from "../../songs/types.ts";
+import { flashLane } from "../razerLighting.ts";
 
 
 export class GameVisuals {
@@ -209,6 +210,7 @@ class FinishVisuals {
     // keyHintTexts[line].material = isHit ? new THREE.MeshBasicMaterial({ color: 0x00ff00 }) : new THREE.MeshBasicMaterial({ color: 0xff0000 });
     if (!isHit) this.flashFail();
     this.visuals.backgroundVisuals.onNotePlay()
+    flashLane(line, isHit);
   }
 
   flashFail() {

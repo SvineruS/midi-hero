@@ -5,6 +5,7 @@ import { StorageUtil } from "../utils/settings.ts";
 import { formatSeconds } from "../utils/formatSeconds.ts";
 import type { MultiplayerRoom } from "../multiplayer/room.ts";
 import type { EndStats } from "../multiplayer/types.ts";
+import { initRazerLighting, disposeRazerLighting } from "./razerLighting.ts";
 
 const HIT_TIME_SUM = 0.03 + 0.1;
 function hitTimeToSlider(hitTime: number) { return String(HIT_TIME_SUM - hitTime); }
@@ -125,6 +126,8 @@ export async function initGame(
   timeOffsetElem.value = timeOffset;
   visibilityElem.value = visibility;
   volumeElem.value = audioVolume;
+
+  initRazerLighting();
 
   // Load song
   const { audio, meta, songData } = await loadOrDownloadSong(songId);
@@ -406,4 +409,5 @@ export function stopGame() {
   }
   game = null;
   gameStarted = false;
+  disposeRazerLighting();
 }
