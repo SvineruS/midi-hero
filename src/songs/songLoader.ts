@@ -1,6 +1,8 @@
 import { downloadSong, searchSongById } from "./bsApi.ts";
+import type { SongMeta, SongData } from "./types.ts";
 
 const CACHE_NAME = "midihero";
+const CACHE_FILES = ["song.ogg", "meta.json", "notes.json"] as const;
 
 // Bump this when the parsing algorithm changes to invalidate all cached notes
 const PARSER_VERSION = 2;
@@ -18,7 +20,7 @@ export async function loadOrDownloadSong(songId: string) {
 }
 
 
-export async function saveSong(songMeta) {
+export async function saveSong(songMeta: SongMeta) {
   const { audio, meta, songData } = await downloadSong(songMeta);
 
   const cache = await caches.open(CACHE_NAME);
@@ -41,8 +43,7 @@ export async function loadSong(songId: string) {
   console.log("Loading song from cache", songId);
   const cache = await caches.open(CACHE_NAME);
   const [song, meta, notes] = await Promise.all(
-    ["song.ogg", "meta.json", "notes.json"]
-      .map(async file => cache.match(new Request(`/${songId}/${file}`)))
+    CACHE_FILES.map(async file => cache.match(new Request(`/${songId}/${file}`)))
   );
 
   if (!song || !meta || !notes)
@@ -72,8 +73,7 @@ export async function loadSong(songId: string) {
 export async function deleteSong(songId: string) {
   const cache = await caches.open(CACHE_NAME);
   await Promise.all(
-    ["song.ogg", "meta.json", "notes.json"]
-      .map(async file => cache.delete(new Request(`/${songId}/${file}`)))
+    CACHE_FILES.map(async file => cache.delete(new Request(`/${songId}/${file}`)))
   );
 }
 

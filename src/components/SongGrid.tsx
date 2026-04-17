@@ -1,8 +1,8 @@
-import { InfiniteScroll } from "../marketplace/utils/infScroll.tsx";
+import { InfiniteScroll } from "./infScroll.tsx";
 import { SearchBar } from "./SearchBar.tsx";
 import { SearchFilterPanel } from "./SearchFilters.tsx";
 import { SongCard } from "./SongCard.tsx";
-import { useSearch } from "./useSearch.ts";
+import { useSearch } from "../marketplace/utils/useSearch.ts";
 
 export function SongGrid({ title, onPlay }: { title: string; onPlay: (songId: string, diffI: number) => void }) {
   const { results, loading, filters, onSubmit, onFiltersChange, loadNextPage } = useSearch();

@@ -1,6 +1,6 @@
 import { createContext } from "preact";
 import { useContext, useState, useCallback } from "preact/hooks";
-import { StorageUtil } from "../../settings/settings.ts";
+import { StorageUtil } from "../../utils/settings.ts";
 
 // Create Context
 const AudioContext = createContext();

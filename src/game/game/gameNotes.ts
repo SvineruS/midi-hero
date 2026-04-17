@@ -1,5 +1,5 @@
 import { NoteEvent } from "../../songs/types.ts";
-import { findMininimum } from "../utils.ts";
+import { findMinimum } from "../utils.ts";
 import { Game } from "./game.ts";
 
 
@@ -86,7 +86,7 @@ export class GameNotes {
       return false;
     }
 
-    const nearestNote = findMininimum(candidates, this._distance);
+    const nearestNote = findMinimum(candidates, this._distance);
     // console.log(this._distanceS(nearestNote), this._distanceS(nearestNote) > 0 ? "late" : "early")
 
     if (nearestNote.status !== undefined) {

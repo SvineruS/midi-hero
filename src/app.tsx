@@ -1,6 +1,6 @@
 import { render } from "preact";
 import "./marketplace/index.css";
-import App from "./marketplace/App.tsx";
+import Marketplace from "./marketplace/Marketplace.tsx";
 import type { MultiplayerRoom } from "./multiplayer/room.ts";
 
 const marketplaceContainer = document.getElementById("marketplace-container")!;
@@ -28,7 +28,7 @@ function showMarketplace() {
   history.replaceState(null, "", window.location.pathname);
   document.title = "MIDI HERO";
 
-  render(<App onPlay={startGame} onJoinLobby={showLobby} />, rootEl);
+  render(<Marketplace onPlay={startGame} onJoinLobby={showLobby} />, rootEl);
 }
 
 async function showLobby(session: MultiplayerRoom) {
@@ -40,7 +40,7 @@ async function showLobby(session: MultiplayerRoom) {
   // Wire the ONE callback: when room says "game ready", start it
   session.onGameReady = (songId, diffI) => startGame(songId, diffI, session);
 
-  const { default: LobbyUI } = await import("./multiplayer/LobbyUI.tsx");
+  const { default: LobbyUI } = await import("./components/LobbyUI.tsx");
 
   render(
     <LobbyUI

@@ -1,7 +1,8 @@
 import "./style.css";
+import GAME_HTML from "./game.html?raw";
 import { loadOrDownloadSong } from "../songs/songLoader.ts";
-import { StorageUtil } from "../settings/settings.ts";
-import { formatSeconds } from "../shared/formatSeconds.ts";
+import { StorageUtil } from "../utils/settings.ts";
+import { formatSeconds } from "../utils/formatSeconds.ts";
 import type { MultiplayerRoom } from "../multiplayer/room.ts";
 import type { EndStats } from "../multiplayer/types.ts";
 
@@ -26,68 +27,6 @@ export function getGrade(accuracy: number) {
 
 const KEYS = { 'KeyS': 0, 'KeyD': 1, 'KeyK': 2, 'KeyL': 3 } as const;
 
-const GAME_HTML = `
-<div id="failFlash"></div>
-<audio id="audioPlayer"></audio>
-<div class="header">
-    <button class="header-btn" id="backToMarketplace">&larr; Marketplace</button>
-    <div class="settings">
-        <button class="settings-toggle" id="settingsToggle" title="Settings">&#9881;&#xFE0E;</button>
-        <div class="controls hidden" id="controlsPanel">
-            <label><span>Delay</span><input type="range" min="-1.0" max="0.5" value="0" step="0.001" id="timeOffset"/></label>
-            <label><span>Difficulty</span><input type="range" min="0.03" max="0.1" value="0.05" step="0.01" id="hitTime"/></label>
-            <label><span>BG lights</span><input type="range" min="0.03" max="0.75" value="0.5" step="0.01" id="visibility"/></label>
-            <label><span>Volume</span><input type="range" min="0" max="1" value="0.5" step="0.01" id="volume"/></label>
-        </div>
-    </div>
-</div>
-<div id="startOverlay" class="overlay">
-    <div class="panel loading">
-        <div class="skel-group">
-            <div class="skel skel-cover"></div>
-            <div class="skel skel-title"></div>
-            <div class="skel skel-author"></div>
-            <div class="skel-chips">
-                <div class="skel skel-chip"></div>
-                <div class="skel skel-chip"></div>
-                <div class="skel skel-chip"></div>
-                <div class="skel skel-chip"></div>
-            </div>
-            <div class="skel skel-hint"></div>
-        </div>
-        <img id="startCover" alt=""/>
-        <div class="info">
-            <h1 id="startTitle"></h1>
-            <h2 id="startAuthor"></h2>
-            <div class="meta">
-                <span id="startDiff"></span>
-                <span id="startBpm"></span>
-                <span id="startDuration"></span>
-                <span id="startNps"></span>
-            </div>
-            <p id="startHint" class="hint">Press <kbd>Space</kbd> or click anywhere to start</p>
-        </div>
-    </div>
-</div>
-<div id="endOverlay" class="overlay hidden">
-    <div class="panel" id="endPanel">
-        <div id="endGrade" class="grade"></div>
-        <div id="endSoloStats" class="stats">
-            <div><span>Score</span><strong id="endScore"></strong></div>
-            <div><span>Accuracy</span><strong id="endAccuracy"></strong></div>
-            <div><span>Max combo</span><strong id="endMaxCombo"></strong></div>
-            <div><span>Hits</span><strong id="endHits"></strong></div>
-            <div><span>Fails</span><strong id="endFails"></strong></div>
-        </div>
-        <div id="endLeaderboard" class="leaderboard hidden"></div>
-        <div class="actions">
-            <button id="endReplay">Play again</button>
-            <button id="endBack">Marketplace</button>
-        </div>
-    </div>
-</div>
-<div id="scoreTicker" class="score-ticker hidden"></div>
-`;
 
 
 // Module-level state (persists across games)

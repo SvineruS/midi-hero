@@ -1,24 +1,7 @@
-import { LightEvent, NoteEvent } from "../../songs/types.ts";
+import { LightEvent, NoteEvent, SongMeta, DifficultyInfo } from "../../songs/types.ts";
 import { Combo } from "./combo.ts";
 import { GameVisuals } from "./gameVisuals.ts";
 import { GameNotes } from "./gameNotes.ts";
-
-
-export interface SongMeta {
-  songName: string;
-  songAuthor: string;
-  bpm: number;
-  duration: number;
-  coverURL: string;
-  [k: string]: any;
-}
-
-export interface DifficultyMeta {
-  name: string;
-  characteristic: string;
-  notes: number;
-  notesPerSecond: number;
-}
 
 export interface GameStats {
   score: number;
@@ -38,11 +21,11 @@ export class Game {
   notes: GameNotes;
 
   meta: SongMeta;
-  difficulty: DifficultyMeta;
+  difficulty: DifficultyInfo;
 
 
 
-  constructor(notes: NoteEvent[], lightEvents: LightEvent[], meta: SongMeta, difficulty: DifficultyMeta) {
+  constructor(notes: NoteEvent[], lightEvents: LightEvent[], meta: SongMeta, difficulty: DifficultyInfo) {
     this.meta = meta;
     this.difficulty = difficulty;
     this.combo = new Combo();

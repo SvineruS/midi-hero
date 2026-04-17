@@ -1,6 +1,6 @@
 import { useState } from "preact/hooks";
-import { useSavedSongs } from "./utils/savedContext.tsx";
-import { exportSongIds, parseSongIds, importSongs } from "../shared/songTransfer.ts";
+import { useSavedSongs } from "../marketplace/utils/savedContext.tsx";
+import { exportSongIds, parseSongIds, importSongs } from "../utils/songTransfer.ts";
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {
   const { savedSongs, saveSong } = useSavedSongs();

@@ -1,6 +1,7 @@
 import { FaGamepad } from "react-icons/fa";
+import type { SongMeta } from "../songs/types.ts";
 
-export function SongCard({ song, onPlay }: { song: any; onPlay: (songId: string, diffI: number) => void }) {
+export function SongCard({ song, onPlay }: { song: SongMeta; onPlay: (songId: string, diffI: number) => void }) {
   return (
     <div className="card-song rounded-lg p-3">
       <div className="text-sm font-semibold mb-2 truncate">

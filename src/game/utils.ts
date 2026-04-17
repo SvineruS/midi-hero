@@ -1,33 +1,13 @@
-export function populateSelect(selectElement, optionsArray) {
-    // Clear any existing options
-    selectElement.innerHTML = '';
-
-    // Create and append options
-    optionsArray.forEach(([value, option]) => {
-        const optionElement = document.createElement('option');
-        optionElement.value = value;
-        optionElement.textContent = option;
-        selectElement.appendChild(optionElement);
-    });
+export function lerp(x: number, a1: number, a2: number, b1: number, b2: number): number {
+    const coef = (x - a1) / (a2 - a1);
+    return coef * (b2 - b1) + b1;
 }
 
-export function lerp(x: number, a1: number, a2: number, b1: number, b2: number) {
-    const a1_a2 = a2 - a1
-    const b1_b2 = b2 - b1
-    const a1_x = x - a1
-
-    const coef = a1_x / a1_a2
-    const b1_x = coef * b1_b2
-
-    const x_ = b1_x + b1
-    return x_;
-}
-
-export function interpolate(current, target, factor) {
+export function interpolate(current: number, target: number, factor: number): number {
     return current + (target - current) * factor;
 }
 
-export function findMininimum(arr: any[], predicate: (x: any) => number) {
+export function findMinimum<T>(arr: T[], predicate: (x: T) => number): T {
     let min = Infinity;
     let minIndex = -1;
     arr.forEach((x, i) => {

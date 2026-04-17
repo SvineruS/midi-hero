@@ -1,9 +1,9 @@
 import { loadDifficulty, TimeProcessor } from "bsmap";
+import type { NoteEvent, LightEvent } from "./types.ts";
 
 
-export function parseDifficultyFile(difficultyFile, startBpm) {
+export function parseDifficultyFile(difficultyFile: string, startBpm: number): { notes: NoteEvent[]; lightEvents: LightEvent[] } {
   const data = loadDifficulty(JSON.parse(difficultyFile));
-  console.log(data)
   const bpm = TimeProcessor.create(startBpm, data.difficulty.customData._bpmChanges)
 
   const notes = [];

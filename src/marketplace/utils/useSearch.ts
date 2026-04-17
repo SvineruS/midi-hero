@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "preact/hooks";
-import { searchSongs, SearchFilters } from "../songs/bsApi.ts";
+import { searchSongs, SearchFilters } from "../../songs/bsApi.ts";
 
 export function useSearch() {
   const [query, setQuery] = useState("");

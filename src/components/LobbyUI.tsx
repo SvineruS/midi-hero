@@ -1,6 +1,6 @@
 import { useState, useEffect } from "preact/hooks";
-import { MultiplayerRoom, generateRoomCode } from "./room.ts";
-import App from "../marketplace/App.tsx";
+import { MultiplayerRoom, generateRoomCode } from "../multiplayer/room.ts";
+import Marketplace from "../marketplace/Marketplace.tsx";
 
 
 // --- Modal for create/join ---
@@ -154,7 +154,7 @@ export default function LobbyUI({ session, onCancel }: {
       <div className="px-4 pt-8 sm:px-8">
         <LobbyHeader session={session} onCancel={onCancel}/>
       </div>
-      <App onPlay={handlePlay}/>
+      <Marketplace onPlay={handlePlay}/>
     </div>
   );
 }

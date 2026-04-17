@@ -1,33 +1,34 @@
 import { useEffect, useState } from "preact/hooks";
 import { FaGamepad, FaHeart, FaPlay, FaStop, FaTrashAlt } from "react-icons/fa";
 import { findSimilarSongs } from "../songs/bsApi.ts";
+import type { SongMeta } from "../songs/types.ts";
 import { AudioProvider, useAudio } from "./utils/audioContext.tsx";
 import { SavedSongsProvider, useSavedSongs } from "./utils/savedContext.tsx";
-import { InfiniteScroll } from "./utils/infScroll.tsx";
-import { SearchBar } from "../shared/SearchBar.tsx";
-import { SearchFilterPanel } from "../shared/SearchFilters.tsx";
-import { useSearch } from "../shared/useSearch.ts";
-import { formatSeconds } from "../shared/formatSeconds.ts";
-import { SettingsModal } from "./SettingsModal.tsx";
+import { InfiniteScroll } from "../components/infScroll.tsx";
+import { SearchBar } from "../components/SearchBar.tsx";
+import { SearchFilterPanel } from "../components/SearchFilters.tsx";
+import { useSearch } from "./utils/useSearch.ts";
+import { formatSeconds } from "../utils/formatSeconds.ts";
+import { SettingsModal } from "../components/SettingsModal.tsx";
 import type { MultiplayerRoom } from "../multiplayer/room.ts";
 
 type Tab = "search" | "saved" | "similar";
 
-function App({ onPlay, onJoinLobby }: {
+function Marketplace({ onPlay, onJoinLobby }: {
   onPlay: (songId: string, diffI: number) => void;
   onJoinLobby?: (session: MultiplayerRoom) => void;
 }) {
   const [showMpModal, setShowMpModal] = useState(false);
-  const [MpModal, setMpModal] = useState<any>(null);
+  const [MpModal, setMpModal] = useState<((...args: any[]) => any) | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [tab, setTab] = useState<Tab>("saved");
-  const [similarSongs, setSimilarSongs] = useState<any[]>([]);
+  const [similarSongs, setSimilarSongs] = useState<SongMeta[]>([]);
   const [similarLoading, setSimilarLoading] = useState(false);
   const [similarSource, setSimilarSource] = useState("");
 
   async function openMultiplayer() {
     if (!MpModal) {
-      const { MultiplayerModal } = await import("../multiplayer/LobbyUI.tsx");
+      const { MultiplayerModal } = await import("../components/LobbyUI.tsx");
       setMpModal(() => MultiplayerModal);
     }
     setShowMpModal(true);
@@ -114,7 +115,7 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
 }
 
 function SimilarSection({ songs, loading, onPlay, onSimilar }: {
-  songs: any[]; loading: boolean;
+  songs: SongMeta[]; loading: boolean;
   onPlay: (songId: string, diffI: number) => void;
   onSimilar: (songId: string, songName: string) => void;
 }) {
@@ -148,7 +149,7 @@ function SavedSongs({ onPlay, onSimilar }: { onPlay: (songId: string, diffI: num
 }
 
 
-function SongList({ songs, onPlay, onSimilar }: { songs: any[], onPlay: (songId: string, diffI: number) => void; onSimilar?: (songId: string, songName: string) => void }) {
+function SongList({ songs, onPlay, onSimilar }: { songs: SongMeta[], onPlay: (songId: string, diffI: number) => void; onSimilar?: (songId: string, songName: string) => void }) {
   return (
     <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
       {songs.map(song => <Song key={song.id} song={song} onPlay={onPlay} onSimilar={onSimilar}/>)}
@@ -156,7 +157,7 @@ function SongList({ songs, onPlay, onSimilar }: { songs: any[], onPlay: (songId:
   );
 }
 
-function Song({ song, onPlay, onSimilar }: { song: any, onPlay: (songId: string, diffI: number) => void; onSimilar?: (songId: string, songName: string) => void }) {
+function Song({ song, onPlay, onSimilar }: { song: SongMeta, onPlay: (songId: string, diffI: number) => void; onSimilar?: (songId: string, songName: string) => void }) {
   const { currentUrl, playAudio, stopAudio } = useAudio();
   const isPlaying = currentUrl == song.previewURL;
 
@@ -255,4 +256,4 @@ function Song({ song, onPlay, onSimilar }: { song: any, onPlay: (songId: string,
   );
 }
 
-export default App
+export default Marketplace
