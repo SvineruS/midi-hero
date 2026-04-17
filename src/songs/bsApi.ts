@@ -122,6 +122,7 @@ function parseAnswerSong(song) {
   const lastVersion = song.versions[song.versions.length - 1];
   return {
     id: song.id,
+    hash: lastVersion.hash,
     songAuthor: song.metadata.songAuthorName,
     songName: song.metadata.songName,
     title: song.name,
