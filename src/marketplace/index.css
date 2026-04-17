@@ -81,6 +81,33 @@ body {
     border-color: rgba(255, 255, 255, 0.12);
 }
 
+/* Settings toggle */
+
+.settings-toggle {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Segoe UI Symbol", "Noto Sans Symbols", sans-serif;
+    font-size: 18px;
+    line-height: 1;
+    color: #e6f1ff;
+    background: rgba(16, 18, 28, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    cursor: pointer;
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    transition: all 0.15s ease;
+}
+
+.settings-toggle:hover {
+    color: #ffffff;
+    background: rgba(28, 32, 48, 0.75);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
 /* Tabs */
 
 .tab-btn {

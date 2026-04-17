@@ -1,12 +1,14 @@
-import { useEffect, useState, useRef } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { FaGamepad, FaHeart, FaPlay, FaStop, FaTrashAlt } from "react-icons/fa";
-import { searchSongs, SearchFilters, findSimilarSongs } from "../songs/bsApi.ts";
+import { findSimilarSongs } from "../songs/bsApi.ts";
 import { AudioProvider, useAudio } from "./utils/audioContext.tsx";
 import { SavedSongsProvider, useSavedSongs } from "./utils/savedContext.tsx";
 import { InfiniteScroll } from "./utils/infScroll.tsx";
 import { SearchBar } from "../shared/SearchBar.tsx";
 import { SearchFilterPanel } from "../shared/SearchFilters.tsx";
+import { useSearch } from "../shared/useSearch.ts";
 import { formatSeconds } from "../shared/formatSeconds.ts";
+import { SettingsModal } from "./SettingsModal.tsx";
 import type { MultiplayerRoom } from "../multiplayer/room.ts";
 
 type Tab = "search" | "saved" | "similar";
@@ -17,6 +19,7 @@ function App({ onPlay, onJoinLobby }: {
 }) {
   const [showMpModal, setShowMpModal] = useState(false);
   const [MpModal, setMpModal] = useState<any>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const [tab, setTab] = useState<Tab>("saved");
   const [similarSongs, setSimilarSongs] = useState<any[]>([]);
   const [similarLoading, setSimilarLoading] = useState(false);
@@ -43,7 +46,13 @@ function App({ onPlay, onJoinLobby }: {
   return (
     <AudioProvider>
       <SavedSongsProvider>
-        <div className="min-h-screen px-4 py-8 sm:px-8">
+        <div className="min-h-screen px-4 py-8 sm:px-8 relative">
+
+          <button onClick={() => setShowSettings(true)}
+                  className="settings-toggle fixed top-4 right-4 z-30"
+                  title="Settings">{"\u2699\uFE0E"}</button>
+
+          {showSettings && <SettingsModal onClose={() => setShowSettings(false)}/>}
 
           <div className="text-center mb-6">
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight"
@@ -115,42 +124,7 @@ function SimilarSection({ songs, loading, onPlay, onSimilar }: {
 }
 
 function Search({ onPlay, onSimilar }: { onPlay: (songId: string, diffI: number) => void; onSimilar: (songId: string, songName: string) => void }) {
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(0);
-  const [searchResults, setSearchResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState<SearchFilters>({});
-  const filtersRef = useRef(filters);
-  filtersRef.current = filters;
-
-  async function doSearch(q: string, p: number, f: SearchFilters, append = false) {
-    if (!append) setLoading(true);
-    const results = await searchSongs(q, p, f);
-    setSearchResults(prev => append ? [...prev, ...results] : results);
-    setLoading(false);
-  }
-
-  function onSubmit(q: string) {
-    setQuery(q);
-    setPage(0);
-    doSearch(q, 0, filtersRef.current);
-  }
-
-  function onFiltersChange(f: SearchFilters) {
-    setFilters(f);
-    setPage(0);
-    doSearch(query, 0, f);
-  }
-
-  async function loadNextPage() {
-    if (loading) return;
-    setLoading(true);
-    const nextPage = page + 1;
-    setPage(nextPage);
-    doSearch(query, nextPage, filtersRef.current, true);
-  }
-
-  useEffect(() => { doSearch("", 0, {}); }, []);
+  const { results, loading, filters, onSubmit, onFiltersChange, loadNextPage } = useSearch();
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -158,7 +132,7 @@ function Search({ onPlay, onSimilar }: { onPlay: (songId: string, diffI: number)
         <SearchBar onSubmit={onSubmit}/>
       </div>
       <SearchFilterPanel filters={filters} onChange={onFiltersChange}/>
-      <SongList songs={searchResults} onPlay={onPlay} onSimilar={onSimilar}/>
+      <SongList songs={results} onPlay={onPlay} onSimilar={onSimilar}/>
       <InfiniteScroll loadMore={loadNextPage}/>
       {loading && <div className="text-sm text-gray-500">Loading...</div>}
     </div>
@@ -172,6 +146,7 @@ function SavedSongs({ onPlay, onSimilar }: { onPlay: (songId: string, diffI: num
 
   return <SongList songs={savedSongs} onPlay={onPlay} onSimilar={onSimilar}/>;
 }
+
 
 function SongList({ songs, onPlay, onSimilar }: { songs: any[], onPlay: (songId: string, diffI: number) => void; onSimilar?: (songId: string, songName: string) => void }) {
   return (

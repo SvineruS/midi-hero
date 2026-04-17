@@ -32,7 +32,7 @@ const GAME_HTML = `
 <div class="header">
     <button class="header-btn" id="backToMarketplace">&larr; Marketplace</button>
     <div class="settings">
-        <button class="settings-toggle" id="settingsToggle" title="Settings">&#9881;</button>
+        <button class="settings-toggle" id="settingsToggle" title="Settings">&#9881;&#xFE0E;</button>
         <div class="controls hidden" id="controlsPanel">
             <label><span>Delay</span><input type="range" min="-1.0" max="0.5" value="0" step="0.001" id="timeOffset"/></label>
             <label><span>Difficulty</span><input type="range" min="0.03" max="0.1" value="0.05" step="0.01" id="hitTime"/></label>
