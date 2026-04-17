@@ -1,6 +1,9 @@
 import { loadDifficulty, TimeProcessor } from "bsmap";
 import type { NoteEvent, LightEvent } from "./types.ts";
 
+// Bump this when the parsing algorithm changes to invalidate all cached notes
+export const PARSER_VERSION = 4;
+
 
 export function parseDifficultyFile(difficultyFile: string, startBpm: number): { notes: NoteEvent[]; lightEvents: LightEvent[] } {
   const data = loadDifficulty(JSON.parse(difficultyFile));
@@ -16,7 +19,7 @@ export function parseDifficultyFile(difficultyFile: string, startBpm: number): {
     const note = colorNote.posX;
     if (note < 0 || note > 3) continue;
 
-    if (time - lastNoteTime[note] < 0.250) continue;
+    if (time - lastNoteTime[note] < 0.075) continue;
     lastNoteTime[note] = time;
 
     notes.push({ time, note, duration: 0.1 });

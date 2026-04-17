@@ -1,11 +1,9 @@
 import { downloadSong, searchSongById } from "./bsApi.ts";
-import type { SongMeta, SongData } from "./types.ts";
+import type { SongMeta } from "./types.ts";
+import {PARSER_VERSION} from "./songParser.ts";
 
 const CACHE_NAME = "midihero";
 const CACHE_FILES = ["song.ogg", "meta.json", "notes.json"] as const;
-
-// Bump this when the parsing algorithm changes to invalidate all cached notes
-const PARSER_VERSION = 2;
 
 
 export async function loadOrDownloadSong(songId: string) {
